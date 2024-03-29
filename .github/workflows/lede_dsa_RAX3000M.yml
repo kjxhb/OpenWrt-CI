@@ -100,6 +100,7 @@ jobs:
           find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "easymesh"/msgstr "简单MESH"/' {} \;
           find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "Frp 内网穿透"/msgstr "内网穿透"/' {} \;
           find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "诊断"/msgstr "网络诊断"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "带宽监控"/msgstr "带宽"/' {} \;
           find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "Socat"/msgstr "端口转发"/' {} \;
           find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "TTYD 终端"/msgstr "命令终端"/' {} \;
           find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "Turbo ACC 网络加速"/msgstr "网络加速"/' {} \;
