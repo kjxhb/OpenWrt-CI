@@ -5,7 +5,7 @@ function index()
 		return
 	end
 
-	entry({"admin", "services", "linkease"}, cbi("linkease"), _("LinkEase"), 10).dependent = true
+	entry({"admin", "services", "linkease"}, cbi("linkease"), _("LinkEase"), 1).dependent = true
 
 	entry({"admin", "services", "linkease_status"}, call("linkease_status"))
 
