@@ -166,6 +166,9 @@ jobs:
           CONFIG_PACKAGE_luci-app-wol=y
           CONFIG_PACKAGE_luci-app-wrtbwmon=y
           CONFIG_PACKAGE_luci-app-zerotier=n
+          CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-webui=n
+          CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-ng=n
+          CONFIG_PACKAGE_luci-app-unblockmusic_INCLUDE_UnblockNeteaseMusic_Go=n
           EOF
           make defconfig
       - name: 下载软件包
