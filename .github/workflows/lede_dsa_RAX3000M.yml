@@ -53,16 +53,18 @@ jobs:
         run: |
           # 添加插件
           git clone https://github.com/vernesong/OpenClash openwrt/package/OpenClash
-          cp -r files/luci-app-advanced openwrt/feeds/luci
-          cp -r files/luci-app-cloudflared openwrt/feeds/luci
-          cp -r files/luci-app-fileassistant openwrt/feeds/luci
-          cp -r files/luci-app-msd_lite openwrt/feeds/luci
-          # 替换argon主题
-          rm -rf openwrt/feeds/luci/themes/luci-theme-argon
-          cp -r files/luci-theme-argon openwrt/feeds/luci/themes
+          cp -r files/luci-app-advanced openwrt/package
+          cp -r files/luci-app-cloudflared openwrt/package
+          cp -r files/luci-app-fileassistant openwrt/package
+          cp -r files/luci-app-msd_lite openwrt/feeds/package
+          cp -r files/luci-theme-argon-lede openwrt/feeds/package
+          cp -r files/istore openwrt/feeds/package
           # 替换msd_lite
           rm -rf openwrt/feeds/packages/net/msd_lite
           cp -r files/msd_lite openwrt/feeds/packages/net
+          # 替换tailscale
+          rm -rf openwrt/feeds/packages/net/tailscale
+          cp -r files/tailscale openwrt/feeds/packages/net
           # 替换update_cloudflare_com_v4.sh
           rm -rf openwrt/feeds/packages/net/ddns-scripts/files/update_cloudflare_com_v4.sh
           cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files
@@ -130,8 +132,8 @@ jobs:
           CONFIG_PACKAGE_cloudflared=y
           CONFIG_PACKAGE_msd_lite=y
           CONFIG_PACKAGE_ddns-scripts_cloudflare.com-v4=y
-          CONFIG_PACKAGE_xupnpd=y
-          CONFIG_PACKAGE_luci-theme-argon=y
+          CONFIG_PACKAGE_tailscale=y
+          CONFIG_PACKAGE_luci-theme-argon-lede=y
           CONFIG_PACKAGE_luci-app-accesscontrol=y
           CONFIG_PACKAGE_luci-app-adbyby-plus=y
           CONFIG_PACKAGE_luci-app-advanced=y
@@ -145,12 +147,15 @@ jobs:
           CONFIG_PACKAGE_luci-app-filetransfer=n
           CONFIG_PACKAGE_luci-app-frpc=y
           CONFIG_PACKAGE_luci-app-hd-idle=y
+          CONFIG_PACKAGE_luci-app-linkease=y
           CONFIG_PACKAGE_luci-app-msd_lite=y
           CONFIG_PACKAGE_luci-app-mwan3=y
           CONFIG_PACKAGE_luci-app-nlbwmon=y
           CONFIG_PACKAGE_luci-app-openclash=y
+          CONFIG_PACKAGE_luci-app-quickstart=y
           CONFIG_PACKAGE_luci-app-ramfree=y
           CONFIG_PACKAGE_luci-app-socat=y
+          CONFIG_PACKAGE_luci-app-store=y
           CONFIG_PACKAGE_luci-app-syncdial=y
           CONFIG_PACKAGE_luci-app-ttyd=y
           CONFIG_PACKAGE_luci-app-turboacc=y
@@ -160,7 +165,7 @@ jobs:
           CONFIG_PACKAGE_luci-app-vsftpd=y
           CONFIG_PACKAGE_luci-app-wol=y
           CONFIG_PACKAGE_luci-app-wrtbwmon=y
-          CONFIG_PACKAGE_luci-app-zerotier=y
+          CONFIG_PACKAGE_luci-app-zerotier=n
           EOF
           make defconfig
       - name: 下载软件包
