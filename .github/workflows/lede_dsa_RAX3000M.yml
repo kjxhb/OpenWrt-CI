@@ -56,9 +56,9 @@ jobs:
           cp -r files/luci-app-advanced openwrt/package
           cp -r files/luci-app-cloudflared openwrt/package
           cp -r files/luci-app-fileassistant openwrt/package
-          cp -r files/luci-app-msd_lite openwrt/feeds/package
-          cp -r files/luci-theme-argon-lede openwrt/feeds/package
-          cp -r files/istore openwrt/feeds/package
+          cp -r files/luci-app-msd_lite openwrt/package
+          cp -r files/luci-theme-argon-lede openwrt/package
+          cp -r files/istore openwrt/package
           # 替换msd_lite
           rm -rf openwrt/feeds/packages/net/msd_lite
           cp -r files/msd_lite openwrt/feeds/packages/net
