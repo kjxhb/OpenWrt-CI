@@ -59,6 +59,9 @@ jobs:
           cp -r files/luci-app-msd_lite openwrt/package
           cp -r files/luci-theme-argon-lede openwrt/package
           cp -r files/istore openwrt/package
+          # 替换cpuinfo
+          rm -rf openwrt/package/lean/autocore/files/arm/sbin/cpuinfo
+          cp -r files/cpuinfo openwrt/package/lean/autocore/files/arm/sbin
           # 替换msd_lite
           rm -rf openwrt/feeds/packages/net/msd_lite
           cp -r files/msd_lite openwrt/feeds/packages/net
