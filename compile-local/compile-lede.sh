@@ -1,5 +1,5 @@
 #!/bin/sh
-#chmod +x diy-lede.sh && sh diy-lede.sh
+#chmod +x compile-lede.sh && sh compile-lede.sh
 
 # 下载LEDE源码
 git clone --depth 1 https://github.com/coolsnowwolf/lede openwrt
