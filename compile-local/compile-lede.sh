@@ -132,7 +132,7 @@ EOF
 make defconfig
 
 # 下载软件包
-make download -j8
+make download -j8 V=s
 find dl -size -1024c -exec rm -f {} \;
 
 # 编译固件
