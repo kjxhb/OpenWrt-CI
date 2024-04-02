@@ -2,6 +2,7 @@
 #chmod +x compile-lede.sh && sh compile-lede.sh
 
 # 下载LEDE源码
+#git clone https://github.com/kjrzxu/OpenWrt-CI
 git clone --depth 1 https://github.com/coolsnowwolf/lede openwrt
 cd openwrt
 
