@@ -17,7 +17,13 @@ cp -r ../OpenWrt-CI/files/luci-app-cloudflared package
 cp -r ../OpenWrt-CI/files/luci-app-fileassistant package
 cp -r ../OpenWrt-CI/files/luci-app-msd_lite package
 cp -r ../OpenWrt-CI/files/luci-theme-argon-lede package
-cp -r ../OpenWrt-CI/files/istore package
+#cp -r ../OpenWrt-CI/files/istore package
+git clone https://github.com/linkease/istore package/istore/istore
+git clone https://github.com/linkease/nas-packages-luci package/istore/nas-packages-luci
+git clone https://github.com/linkease/nas-packages package/istore/nas-packages
+find package -path '*/quickstart/index.js' -exec sed -i 's#system/mounts#system/fstab#' {} \;
+find package -path '*/quickstart/index.js' -exec sed -i 's#services/samba4#nas/samba4#' {} \;
+
 # 替换cpuinfo
 rm -rf package/lean/autocore/files/arm/sbin/cpuinfo
 cp -r ../OpenWrt-CI/files/cpuinfo package/lean/autocore/files/arm/sbin
