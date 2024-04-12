@@ -23,7 +23,6 @@ git clone https://github.com/linkease/nas-packages-luci package/istore/nas-packa
 git clone https://github.com/linkease/nas-packages package/istore/nas-packages
 find package -path '*/quickstart/index.js' -exec sed -i 's#system/mounts#system/fstab#g' {} \;
 find package -path '*/quickstart/index.js' -exec sed -i 's#services/samba4#nas/samba4#g' {} \;
-
 # 替换cpuinfo
 rm -rf package/lean/autocore/files/arm/sbin/cpuinfo
 cp -r ../OpenWrt-CI/files/cpuinfo package/lean/autocore/files/arm/sbin
