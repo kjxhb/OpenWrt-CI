@@ -24,6 +24,8 @@ git clone https://github.com/linkease/nas-packages package/nas-packages
 find package -path '*/quickstart/index.js' -exec sed -i 's#system/mounts#system/fstab#g' {} \;
 find package -path '*/quickstart/index.js' -exec sed -i 's#services/samba4#nas/samba4#g' {} \;
 find package -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "网络向导"/msgstr "向导"/' {} \;
+find package -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "易有云文件管理器"/msgstr "易有云"/' {} \;
+find package -path '*/linkease.lua' -exec sed -i 's/LinkEase"), 20/LinkEase"), 1/' {} \;
 find package -path '*/quickstart.lua' -exec sed -i 's/NetworkPort"), 11/NetworkPort"), 41/' {} \;
 # 替换cpuinfo
 rm -rf package/lean/autocore/files/arm/sbin/cpuinfo
