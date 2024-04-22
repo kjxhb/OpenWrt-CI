@@ -77,7 +77,7 @@ function conf.write(self, section, value)
 		fs.writefile("/tmp/config/wireless", value)
 		if (luci.sys.call("cmp -s /tmp/config/wireless /etc/config/wireless") == 1) then
 			fs.writefile("/etc/config/wireless", value)
-			luci.sys.call("/etc/init.d/wireless restart >/dev/null")
+			luci.sys.call("wifi reload >/dev/null &")
 		end
 		fs.remove("/tmp/config/wireless")
 	end
