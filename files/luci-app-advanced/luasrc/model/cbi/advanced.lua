@@ -62,7 +62,7 @@ t=t:gsub("\r\n?","\n")
 e.writefile("/tmp/wireless",t)
 if(luci.sys.call("cmp -s /tmp/wireless /etc/config/wireless")==1)then
 e.writefile("/etc/config/wireless",t)
-luci.sys.call("/etc/init.d/wireless restart >/dev/null")
+luci.sys.call("wifi reload >/dev/null &")
 end
 e.remove("/tmp/wireless")
 end
