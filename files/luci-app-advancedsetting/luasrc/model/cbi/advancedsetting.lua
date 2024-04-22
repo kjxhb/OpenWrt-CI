@@ -74,12 +74,12 @@ end
 function conf.write(self, section, value)
 	if value then
 		value = value:gsub("\r\n?", "\n")
-		fs.writefile("/tmp/config/wireless", value)
-		if (luci.sys.call("cmp -s /tmp/config/wireless /etc/config/wireless") == 1) then
+		fs.writefile("/tmp/wireless", value)
+		if (luci.sys.call("cmp -s /tmp/wireless /etc/config/wireless") == 1) then
 			fs.writefile("/etc/config/wireless", value)
 			luci.sys.call("wifi reload >/dev/null &")
 		end
-		fs.remove("/tmp/config/wireless")
+		fs.remove("/tmp/wireless")
 	end
 end
 end
@@ -99,12 +99,12 @@ end
 function conf.write(self, section, value)
 	if value then
 		value = value:gsub("\r\n?", "\n")
-		fs.writefile("/tmp/config/firewall", value)
-		if (luci.sys.call("cmp -s /tmp/config/firewall /etc/config/firewall") == 1) then
+		fs.writefile("/tmp/firewall", value)
+		if (luci.sys.call("cmp -s /tmp/firewall /etc/config/firewall") == 1) then
 			fs.writefile("/etc/config/firewall", value)
 			luci.sys.call("/etc/init.d/firewall restart >/dev/null")
 		end
-		fs.remove("/tmp/config/firewall")
+		fs.remove("/tmp/firewall")
 	end
 end
 end
@@ -149,12 +149,12 @@ end
 function conf.write(self, section, value)
 	if value then
 		value = value:gsub("\r\n?", "\n")
-		fs.writefile("/tmp/config/dhcp", value)
-		if (luci.sys.call("cmp -s /tmp/config/dhcp /etc/config/dhcp") == 1) then
+		fs.writefile("/tmp/dhcp", value)
+		if (luci.sys.call("cmp -s /tmp/dhcp /etc/config/dhcp") == 1) then
 			fs.writefile("/etc/config/dhcp", value)
 			luci.sys.call("/etc/init.d/dhcp restart >/dev/null")
 		end
-		fs.remove("/tmp/config/dhcp")
+		fs.remove("/tmp/dhcp")
 	end
 end
 end
@@ -174,12 +174,12 @@ end
 function conf.write(self, section, value)
 	if value then
 		value = value:gsub("\r\n?", "\n")
-		fs.writefile("/tmp/config/arpbind", value)
-		if (luci.sys.call("cmp -s /tmp/config/arpbind /etc/config/arpbind") == 1) then
+		fs.writefile("/tmp/arpbind", value)
+		if (luci.sys.call("cmp -s /tmp/arpbind /etc/config/arpbind") == 1) then
 			fs.writefile("/etc/config/arpbind", value)
 			luci.sys.call("/etc/init.d/arpbind restart >/dev/null")
 		end
-		fs.remove("/tmp/config/arpbind")
+		fs.remove("/tmp/arpbind")
 	end
 end
 end
@@ -199,12 +199,12 @@ end
 function conf.write(self, section, value)
 	if value then
 		value = value:gsub("\r\n?", "\n")
-		fs.writefile("/tmp/config/mwan3", value)
-		if (luci.sys.call("cmp -s /tmp/config/mwan3 /etc/config/mwan3") == 1) then
+		fs.writefile("/tmp/mwan3", value)
+		if (luci.sys.call("cmp -s /tmp/mwan3 /etc/config/mwan3") == 1) then
 			fs.writefile("/etc/config/mwan3", value)
 			luci.sys.call("/etc/init.d/mwan3 restart >/dev/null")
 		end
-		fs.remove("/tmp/config/mwan3")
+		fs.remove("/tmp/mwan3")
 	end
 end
 end
@@ -224,12 +224,12 @@ end
 function conf.write(self, section, value)
 	if value then
 		value = value:gsub("\r\n?", "\n")
-		fs.writefile("/tmp/config/ddns", value)
-		if (luci.sys.call("cmp -s /tmp/config/ddns /etc/config/ddns") == 1) then
+		fs.writefile("/tmp/ddns", value)
+		if (luci.sys.call("cmp -s /tmp/ddns /etc/config/ddns") == 1) then
 			fs.writefile("/etc/config/ddns", value)
 			luci.sys.call("/etc/init.d/ddns restart >/dev/null")
 		end
-		fs.remove("/tmp/config/ddns")
+		fs.remove("/tmp/ddns")
 	end
 end
 end
@@ -249,12 +249,12 @@ end
 function conf.write(self, section, value)
 	if value then
 		value = value:gsub("\r\n?", "\n")
-		fs.writefile("/tmp/config/smartdns", value)
-		if (luci.sys.call("cmp -s /tmp/config/smartdns /etc/config/smartdns") == 1) then
+		fs.writefile("/tmp/smartdns", value)
+		if (luci.sys.call("cmp -s /tmp/smartdns /etc/config/smartdns") == 1) then
 			fs.writefile("/etc/config/smartdns", value)
 			luci.sys.call("/etc/init.d/smartdns restart >/dev/null")
 		end
-		fs.remove("/tmp/config/smartdns")
+		fs.remove("/tmp/smartdns")
 	end
 end
 end
@@ -274,12 +274,12 @@ end
 function conf.write(self, section, value)
 	if value then
 		value = value:gsub("\r\n?", "\n")
-		fs.writefile("/tmp/config/openclash", value)
-		if (luci.sys.call("cmp -s /tmp/config/openclash /etc/config/openclash") == 1) then
+		fs.writefile("/tmp/openclash", value)
+		if (luci.sys.call("cmp -s /tmp/openclash /etc/config/openclash") == 1) then
 			fs.writefile("/etc/config/openclash", value)
 			luci.sys.call("/etc/init.d/openclash restart >/dev/null")
 		end
-		fs.remove("/tmp/config/openclash")
+		fs.remove("/tmp/openclash")
 	end
 end
 end
@@ -299,12 +299,12 @@ end
 function conf.write(self, section, value)
 	if value then
 		value = value:gsub("\r\n?", "\n")
-		fs.writefile("/tmp/config/uhttpd", value)
-		if (luci.sys.call("cmp -s /tmp/config/uhttpd /etc/config/uhttpd") == 1) then
+		fs.writefile("/tmp/uhttpd", value)
+		if (luci.sys.call("cmp -s /tmp/uhttpd /etc/config/uhttpd") == 1) then
 			fs.writefile("/etc/config/uhttpd", value)
 			luci.sys.call("/etc/init.d/uhttpd restart >/dev/null")
 		end
-		fs.remove("/tmp/config/uhttpd")
+		fs.remove("/tmp/uhttpd")
 	end
 end
 end
