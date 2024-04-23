@@ -12,7 +12,7 @@ cd openwrt
 
 # 添加插件
 git clone --depth 1 https://github.com/vernesong/OpenClash package/OpenClash
-cp -r ../OpenWrt-CI/files/luci-app-advanced package
+cp -r ../OpenWrt-CI/files/luci-app-advancedsetting package
 cp -r ../OpenWrt-CI/files/luci-app-cloudflared package
 cp -r ../OpenWrt-CI/files/luci-app-fileassistant package
 cp -r ../OpenWrt-CI/files/luci-app-msd_lite package
@@ -104,7 +104,7 @@ CONFIG_PACKAGE_tailscale=y
 CONFIG_PACKAGE_luci-theme-argon-lede=y
 CONFIG_PACKAGE_luci-app-accesscontrol=y
 CONFIG_PACKAGE_luci-app-adbyby-plus=y
-CONFIG_PACKAGE_luci-app-advanced=y
+CONFIG_PACKAGE_luci-app-advancedsetting=y
 CONFIG_PACKAGE_luci-app-arpbind=y
 CONFIG_PACKAGE_luci-app-autoreboot=y
 CONFIG_PACKAGE_luci-app-cloudflared=y
