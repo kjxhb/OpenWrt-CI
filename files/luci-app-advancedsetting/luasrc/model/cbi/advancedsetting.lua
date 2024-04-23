@@ -309,4 +309,54 @@ function conf.write(self, section, value)
 end
 end
 
+--hd-idle
+if nixio.fs.access("/etc/config/hd-idle") then
+s:tab("config13", translate("配置硬盘休眠"), translate("本页是配置/etc/config/hd-idle的文档内容。应用保存后自动重启生效"))
+conf = s:taboption("config13", Value, "editconf13", nil, translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template = "cbi/tvalue"
+conf.rows = 20
+conf.wrap = "off"
+
+function conf.cfgvalue(self, section)
+	return fs.readfile("/etc/config/hd-idle") or ""
+end
+
+function conf.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		fs.writefile("/tmp/hd-idle", value)
+		if (luci.sys.call("cmp -s /tmp/hd-idle /etc/config/hd-idle") == 1) then
+			fs.writefile("/etc/config/hd-idle", value)
+			luci.sys.call("/etc/init.d/hd-idle restart >/dev/null")
+		end
+		fs.remove("/tmp/hd-idle")
+	end
+end
+end
+
+--samba4
+if nixio.fs.access("/etc/config/samba4") then
+s:tab("config14", translate("配置网络共享"), translate("本页是配置/etc/config/samba4的文档内容。应用保存后自动重启生效"))
+conf = s:taboption("config14", Value, "editconf14", nil, translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template = "cbi/tvalue"
+conf.rows = 20
+conf.wrap = "off"
+
+function conf.cfgvalue(self, section)
+	return fs.readfile("/etc/config/samba4") or ""
+end
+
+function conf.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		fs.writefile("/tmp/samba4", value)
+		if (luci.sys.call("cmp -s /tmp/samba4 /etc/config/samba4") == 1) then
+			fs.writefile("/etc/config/samba4", value)
+			luci.sys.call("/etc/init.d/samba4 restart >/dev/null")
+		end
+		fs.remove("/tmp/samba4")
+	end
+end
+end
+
 return m
