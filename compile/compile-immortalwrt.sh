@@ -2,7 +2,7 @@
 #chmod +x compile-immortalwrt.sh && sh compile-immortalwrt.sh
 
 # 下载LEDE源码
-#git clone https://github.com/kjrzxu/OpenWrt-CI
+#git clone https://github.com/kjxhb/OpenWrt-CI
 git clone --depth 1 https://github.com/padavanonly/immortalwrt-mt798x immortalwrt
 cd immortalwrt
 
