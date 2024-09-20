@@ -1,0 +1,6 @@
+
+msgid "Cloudflared"
+msgstr "内网穿透"
+
+msgid "Cloudflared-Cloudflared"
+msgstr "内网穿透-Cloudflared"

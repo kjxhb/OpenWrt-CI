@@ -1,0 +1,31 @@
+# SSH连接Actions：终端（或CMD）输入ssh KThFLfxpPp9sR9459pcGPTZ4X@nyc1.tmate.io登陆，web shell输入：https://tmate.io/t/KThFLfxpPp9sR9459pcGPTZ4X。
+# web shell黑屏：输入Crtl+C，结束输入Ctrl+D,将继续下一个流程。
+# 输入/tmp/keepalive 关闭15分钟退出。
+
+name: Actions
+
+on:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: true
+        default: 'true/false'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: SSH connection to Actions
+        #uses: P3TERX/ssh2actions@main
+        #uses: mxschmitt/action-tmate@v3
+        uses: csexton/debugger-action@master
+        if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+        env:
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

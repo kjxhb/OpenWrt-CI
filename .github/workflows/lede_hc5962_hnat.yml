@@ -1,0 +1,207 @@
+# 
+# Copyright (C) 2019 P3TERX <https://p3terx.com>
+# <https://github.com/KFERMercer/OpenWrt-CI>
+#
+#hnat驱动说明：如果要用5.10内核，需要替换大神的ramips整个文件夹。
+#20240830更新：1、修复batman-adv编译错误；2、替换autosamba中luci-app-samba4为luci-app-samba；3、添加git-http、tailscal
+#20240831更新：1、修改factory.bin包大小为45m，原插件大于32m无法生成。
+#20240906更新：1、恢复固件大小（路由器不支持大于32M的factory.bin；2、更新cloudflared版本；3、只提取targets/ramips/mt7621。
+#20240913更新：1、取消替换tailscale。
+#20240914更新：1、更新cloudflared版本为2024.9.1。
+#20240920更新：1、更换源码仓库为克隆的LEDE仓库。
+
+
+name: compile LEDE_hc5962_hnat
+
+on:
+#  push:
+#    branches: 
+#      - main
+#  schedule:
+#    - cron: 0 0 1 * *
+#  watch:
+#    types: started
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+      - name: 空间清理和初始化环境
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          docker rmi `docker images -q`
+          sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android
+          sudo -E apt-mark hold grub-efi-amd64-signed
+          sudo -E apt update
+          sudo -E apt -y purge azure-cli* docker* ghc* zulu* llvm* firefox google* dotnet* powershell* openjdk* mysql* php* mongodb* dotnet* snap*
+          sudo -E apt -y full-upgrade
+          sudo -E apt -y install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+          sudo -E systemctl daemon-reload
+          sudo -E apt -y autoremove --purge
+          sudo -E apt clean
+          sudo -E timedatectl set-timezone "Asia/Shanghai"
+
+      - name: 检出仓库代码
+        uses: actions/checkout@v4
+
+      - name: 下载源码
+        run: git clone --depth 1 https://github.com/kjxhb/lede openwrt
+#      - name: 更改5.10内核
+#        run: sed -i '/USE_ELF_REL=y/a CONFIG_MT753X_GSW=y' openwrt/target/linux/ramips/mt7621/config-5.10
+      - name: 替换hnat驱动，替换ramips
+        run: |
+          rm -rf openwrt/target/linux/ramips/dts/mt7621_hiwifi_hc5962.dts
+          rm -rf openwrt/target/linux/ramips/mt7621/base-files/etc/board.d/02_network
+          cp files/hc5952-lede/LEDE-hnat-02network-dst/mt7621_hiwifi_hc5962.dts openwrt/target/linux/ramips/dts
+          cp files/hc5952-lede/LEDE-hnat-02network-dst/02_network openwrt/target/linux/ramips/mt7621/base-files/etc/board.d
+#          rm -rf openwrt/target/linux/ramips
+#          cp -r files/hc5952-lede/ramips openwrt/target/linux
+      - name: 升级feeds
+        run: cd openwrt && ./scripts/feeds update -a
+      - name: 安装feeds
+        run: cd openwrt && ./scripts/feeds install -a
+
+      - name: 替换和修改插件
+        run: |
+          # 修复batman-adv编译错误
+          rm -rf openwrt/feeds/routing/batman-adv
+          cp -r files/hc5952-lede/batman-adv openwrt/feeds/routing
+          # 添加插件
+          git clone --depth 1 https://github.com/vernesong/OpenClash openwrt/package/OpenClash
+          cp -r files/luci-app-advancedsetting openwrt/package
+          cp -r files/luci-app-cloudflared openwrt/package
+          cp -r files/luci-app-fileassistant openwrt/package
+          cp -r files/luci-app-msd_lite openwrt/package
+          cp -r files/luci-theme-argon-lede openwrt/package
+          # 替换msd_lite
+          rm -rf openwrt/feeds/packages/net/msd_lite
+          cp -r files/msd_lite openwrt/feeds/packages/net
+          # 替换tailscale
+          #rm -rf openwrt/feeds/packages/net/tailscale
+          #cp -r files/tailscale openwrt/feeds/packages/net
+          # 替换update_cloudflare_com_v4.sh
+          rm -rf openwrt/feeds/packages/net/ddns-scripts/files/update_cloudflare_com_v4.sh
+          cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files
+          # 修改cloudflared
+          sed -i 's/2023.2.2/2024.9.1/g' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i 's/b0abaff125d29c517894f6ea74dcc7044c92500670463595ba9ff4950a1d2fc2/f96b703ea848bc538322eb957749b0b2395e0cf83213cf310cbde0a3f598eac4/g' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i '/init.d/d' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i '/cloudflared.config $(1)/d' openwrt/feeds/packages/net/cloudflared/Makefile
+          rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.init
+          rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.config
+          # 替换autosamba
+          rm -rf openwrt/package/lean/autosamba
+          cp -r files/autosamba openwrt/package/lean
+          # 修改硬盘休眠配置文件
+          sed -i 's#sda#/mnt/sda1#g' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
+          # 修改插件顺序
+          find openwrt/feeds/luci -path '*/network.lua' -exec sed -i 's/page.order  = 30/page.order  = 42/' {} \;
+          find openwrt/feeds/luci -path '*/network.lua' -exec sed -i 's/page.order  = 60/page.order  = 41/' {} \;
+          find openwrt/feeds/luci -path '*/network.lua' -exec sed -i '134s/page.order  = 50/page.order  = 43/' {} \;
+          find openwrt/feeds/luci -path '*/firewall.lua' -exec sed -i 's/_("Firewall"), 60/_("Firewall"), 35/' {} \;
+          find openwrt/feeds/luci -path '*/system.lua' -exec sed -i 's/Scheduled Tasks"), 46/Scheduled Tasks"), 51/' {} \;
+          find openwrt/feeds/luci -path '*/arpbind.lua' -exec sed -i 's/MAC Binding"), 45/MAC Binding"), 65/' {} \;
+          find openwrt/feeds/luci -path '*/ddns.lua' -exec sed -i 's/"Dynamic DNS"), 59/"Dynamic DNS"), 105/' {} \;
+          find openwrt/feeds/luci -path '*/easymesh.lua' -exec sed -i 's/"EASY MESH"), 60/"EASY MESH"), 80/' {} \;
+          find openwrt/feeds/luci -path '*/hd_idle.lua' -exec sed -i 's/("HDD Idle"), 60/("HDD Idle"), 70/' {} \;
+          find openwrt/feeds/luci -path '*/terminal.lua' -exec sed -i 's/"TTYD Terminal"), 10/"TTYD Terminal"), 55/' {} \;
+          # 修改插件名称
+          find openwrt/package/OpenClash -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "OpenClash"/msgstr "科学上网"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/base.po' -exec sed -i '2692s/msgstr "重启"/msgstr "系统重启"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's#msgstr "备份/升级"#msgstr "备份升级"#' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "上网时间控制"/msgstr "时间控制"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's#msgstr "IP/MAC 绑定"#msgstr "MAC绑定"#' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "广告屏蔽大师 Plus+"/msgstr "广告屏蔽"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "动态 DNS(DDNS)"/msgstr "动态 DNS"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "easymesh"/msgstr "简单MESH"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "Frp 内网穿透"/msgstr "FRP 穿透"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "诊断"/msgstr "网络诊断"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "带宽监控"/msgstr "带宽"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "Socat"/msgstr "端口转发"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "TTYD 终端"/msgstr "命令终端"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "Turbo ACC 网络加速"/msgstr "网络加速"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "uHTTPd"/msgstr "WEB 管理"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "UPnP"/msgstr "UPnP转发"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "USB 打印服务器"/msgstr "USB 打印"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "KMS 服务器"/msgstr "KMS 激活"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "网络存储"/msgstr "存储"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "FTP 服务器"/msgstr "FTP 服务"/' {} \;
+          
+      - name: 生成config内核编译
+        run: |
+          cd openwrt
+          rm -rf ./tmp && rm -rf ./.config
+          touch ./.config
+          # 机型设置:
+          cat >> .config <<EOF
+          CONFIG_TARGET_ramips=y
+          CONFIG_TARGET_ramips_mt7621=y
+          CONFIG_TARGET_ramips_mt7621_DEVICE_hiwifi_hc5962=y
+          EOF
+          # 常用插件
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_ipv6helper=y
+          CONFIG_PACKAGE_autosamba=y
+          CONFIG_PACKAGE_automount=y
+          CONFIG_PACKAGE_cloudflared=y
+          CONFIG_PACKAGE_git-http=y
+          CONFIG_PACKAGE_msd_lite=y
+          CONFIG_PACKAGE_ddns-scripts_cloudflare.com-v4=y
+          CONFIG_PACKAGE_tailscale=y
+          CONFIG_PACKAGE_luci-theme-argon-lede=y
+          CONFIG_PACKAGE_luci-app-accesscontrol=y
+          CONFIG_PACKAGE_luci-app-adbyby-plus=y
+          CONFIG_PACKAGE_luci-app-advancedsetting=y
+          CONFIG_PACKAGE_luci-app-arpbind=y
+          CONFIG_PACKAGE_luci-app-autoreboot=y
+          CONFIG_PACKAGE_luci-app-cloudflared=y
+          CONFIG_PACKAGE_luci-app-ddns=y
+          CONFIG_PACKAGE_luci-app-diskman=y
+          CONFIG_PACKAGE_luci-app-easymesh=y
+          CONFIG_PACKAGE_luci-app-fileassistant=y
+          CONFIG_PACKAGE_luci-app-filetransfer=n
+          CONFIG_PACKAGE_luci-app-frpc=y
+          CONFIG_PACKAGE_luci-app-hd-idle=y
+          CONFIG_PACKAGE_luci-app-msd_lite=y
+          CONFIG_PACKAGE_luci-app-mwan3=y
+          CONFIG_PACKAGE_luci-app-nlbwmon=y
+          CONFIG_PACKAGE_luci-app-openclash=y
+          CONFIG_PACKAGE_luci-app-ramfree=y
+          CONFIG_PACKAGE_luci-app-smartdns=y
+          CONFIG_PACKAGE_luci-app-socat=y
+          CONFIG_PACKAGE_luci-app-syncdial=y
+          CONFIG_PACKAGE_luci-app-ttyd=y
+          CONFIG_PACKAGE_luci-app-turboacc=y
+          CONFIG_PACKAGE_luci-app-uhttpd=y
+          CONFIG_PACKAGE_luci-app-upnp=y
+          CONFIG_PACKAGE_luci-app-vlmcsd=y
+          CONFIG_PACKAGE_luci-app-vsftpd=y
+          CONFIG_PACKAGE_luci-app-wol=y
+          CONFIG_PACKAGE_luci-app-wrtbwmon=y
+          CONFIG_PACKAGE_luci-app-zerotier=n
+          CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-webui=n
+          CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-ng=n
+          CONFIG_PACKAGE_luci-app-unblockmusic_INCLUDE_UnblockNeteaseMusic_Go=n
+          EOF
+          make defconfig
+
+      - name: 下载软件包
+        run: |
+          cd openwrt
+          make download -j8
+          find dl -size -1024c -exec rm -f {} \;
+      - name: 编译固件
+        run: |
+          cd openwrt
+          echo -e "$(nproc) thread ../files."
+          make -j$(($(nproc) + 1)) V=s
+      - name : 上传bin文件夹(固件+ipk)到 github actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenWrt_LEDE_hc5962_hnat-20240920
+          path: openwrt/bin/targets/ramips/mt7621

@@ -1,0 +1,138 @@
+# This is free software, lisence use MIT.
+# Copyright (C) 2019 P3TERX <https://p3terx.com>
+#
+#20240915更新：更换为ImmortalWrt官方库，config版本为rax3000m-nand，替换02network、dts
+#20240918更新：整体更换target/linux下的mediatek
+
+name: compile ImmortalWrt_RAX3000M
+
+on:
+#  push:
+#    branches: 
+#      - main
+#  schedule:
+#    - cron: 0 0 1 * *
+#  watch:
+#    types: started
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+      - name: 部署编译环境
+        run: |
+          docker rmi `docker images -q`
+          sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android
+          sudo -E apt-mark hold grub-efi-amd64-signed
+          sudo -E apt update
+          sudo -E apt -y purge azure-cli* docker* ghc* zulu* llvm* firefox google* dotnet* powershell* openjdk* mysql* php* mongodb* dotnet* snap*
+          sudo -E apt -y full-upgrade
+          sudo -E apt -y install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+          sudo -E systemctl daemon-reload
+          sudo -E apt -y autoremove --purge
+          sudo -E apt clean
+          sudo -E timedatectl set-timezone "Asia/Shanghai"
+
+      - name: 准备工作
+        uses: actions/checkout@v4
+          
+      - name: 下载源码
+        #run: git clone https://github.com/hanwckf/immortalwrt-mt798x openwrt
+        run: git clone https://github.com/immortalwrt/immortalwrt.git openwrt
+      - name: 升级feeds
+        run: cd openwrt && ./scripts/feeds update -a
+      - name: 安装feeds
+        run: cd openwrt && ./scripts/feeds install -a
+      
+      - name: 替换和修改插件
+        run: |
+          # 替换02network、dts
+          #rm -rf openwrt/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
+          #rm -rf openwrt/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-emmc.dtso
+          #rm -rf openwrt/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand.dtso
+          #rm -rf openwrt/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts
+          #rm -rf openwrt/target/linux/mediatek/image/filogic.mk
+          #cp -r files/rax3000m-lede/02_network openwrt/target/linux/mediatek/filogic/base-files/etc/board.d
+          #cp -r files/rax3000m-lede/mt7981b-cmcc-rax3000m-emmc.dts openwrt/target/linux/mediatek/dts
+          #cp -r files/rax3000m-lede/mt7981b-cmcc-rax3000m-nand.dts openwrt/target/linux/mediatek/dts
+          #cp -r files/rax3000m-lede/mt7981b-cmcc-rax3000m.dts openwrt/target/linux/mediatek/dts
+          #cp -r files/rax3000m-lede/filogic.mk openwrt/target/linux/mediatek/image
+          # 替换mediatek
+          rm -rf openwrt/target/linux/mediatek
+          cp -r files/rax3000m-lede/mediatek openwrt/target/linux
+
+      - name: 生成config内核编译
+        run: |
+          cd openwrt
+          rm -rf ./tmp && rm -rf ./.config
+          touch ./.config
+          # 机型设置:
+          cat >> .config <<EOF
+          CONFIG_TARGET_mediatek=y
+          #CONFIG_TARGET_mediatek_mt7981=y
+          CONFIG_TARGET_mediatek_filogic=y
+          #CONFIG_TARGET_mediatek_mt7981_DEVICE_cmcc_rax3000m=y
+          CONFIG_TARGET_mediatek_filogic_DEVICE_cmcc_rax3000m-nand=y
+          EOF
+          # 常用插件
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_default-settings-chn=y
+          CONFIG_PACKAGE_ipv6helper=y
+          CONFIG_PACKAGE_autosamba=y
+          CONFIG_PACKAGE_automount=y
+          #CONFIG_PACKAGE_cloudflared=y
+          CONFIG_PACKAGE_msd_lite=y
+          CONFIG_PACKAGE_ddns-scripts-cloudflare=y
+          CONFIG_PACKAGE_xupnpd=y
+          CONFIG_PACKAGE_luci-theme-argon=y
+          CONFIG_PACKAGE_luci-app-argon-config=y
+          CONFIG_PACKAGE_luci-app-accesscontrol=y
+          CONFIG_PACKAGE_luci-app-adbyby-plus=y
+          CONFIG_PACKAGE_luci-app-advancedsetting=y
+          CONFIG_PACKAGE_luci-app-arpbind=y
+          CONFIG_PACKAGE_luci-app-autoreboot=y
+          #CONFIG_PACKAGE_luci-app-cloudflared=y
+          CONFIG_PACKAGE_luci-app-ddns=y
+          CONFIG_PACKAGE_luci-app-diskman=y
+          CONFIG_PACKAGE_luci-app-easymesh=y
+          CONFIG_PACKAGE_luci-app-eqos=y
+          CONFIG_PACKAGE_luci-app-fileassistant=y
+          CONFIG_PACKAGE_luci-app-filetransfer=n
+          CONFIG_PACKAGE_luci-app-frpc=y
+          CONFIG_PACKAGE_luci-app-hd-idle=y
+          CONFIG_PACKAGE_luci-app-msd_lite=y
+          CONFIG_PACKAGE_luci-app-mwan3=y
+          CONFIG_PACKAGE_luci-app-nlbwmon=y
+          CONFIG_PACKAGE_luci-app-openclash=y
+          CONFIG_PACKAGE_luci-app-ramfree=y
+          CONFIG_PACKAGE_luci-app-socat=y
+          CONFIG_PACKAGE_luci-app-syncdial=y
+          CONFIG_PACKAGE_luci-app-ttyd=y
+          CONFIG_PACKAGE_luci-app-turboacc=y
+          CONFIG_PACKAGE_luci-app-uhttpd=y
+          CONFIG_PACKAGE_luci-app-upnp=y
+          CONFIG_PACKAGE_luci-app-usb-printer=y
+          CONFIG_PACKAGE_luci-app-vlmcsd=y
+          CONFIG_PACKAGE_luci-app-vsftpd=y
+          CONFIG_PACKAGE_luci-app-wol=y
+          CONFIG_PACKAGE_luci-app-zerotier=y
+          EOF
+          make defconfig
+      - name: 下载软件包
+        run: |
+          cd openwrt
+          make download -j8
+          find dl -size -1024c -exec rm -f {} \;
+      - name: 编译固件
+        run: |
+          cd openwrt
+          echo -e "$(nproc) thread ../files."
+          make -j$(($(nproc) + 1)) V=s
+      - name : 上传bin文件夹(固件+ipk)到 github actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: ImmortalWrt_RAX3000M-20240918
+          path: openwrt/bin

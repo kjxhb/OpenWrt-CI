@@ -1,0 +1,226 @@
+#
+# This is free software, lisence use MIT.
+# 
+# Copyright (C) 2019 P3TERX <https://p3terx.com>
+# Copyright (C) 2020 KFERMercer <KFER.Mercer@gmail.com>
+# 
+# <https://github.com/KFERMercer/OpenWrt-CI>
+#
+
+name: compile LEDE_hnat
+
+on:
+  #push:
+  #  branches: 
+  #    - master
+  #schedule:
+  #  - cron: 0 0 1 * *
+  #watch:
+  #  types: started
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+      - name: 准备工作
+        uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 0
+
+      - name: 部署编译环境
+        run: |
+          sudo apt update -y
+          sudo apt full-upgrade -y
+          sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+          bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+          git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev \
+          libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev \
+          libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 \
+          python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo \
+          uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+      - name: 下载源码
+        run: git clone https://github.com/coolsnowwolf/lede openwrt
+      - name: 写入插件到默认配置
+        run: |
+          cd openwrt
+          echo "src-git package https://github.com/kjrzxu/package.git" >> ./feeds.conf.default
+          echo "src-git openclash https://github.com/vernesong/OpenClash.git" >> ./feeds.conf.default
+          echo "src-git helloworld https://github.com/fw876/helloworld.git" >> ./feeds.conf.default
+          echo "src-git passwall https://github.com/xiaorouji/openwrt-passwall.git" >> ./feeds.conf.default
+#      - name: 更改5.10内核
+#        run: sed -i '/USE_ELF_REL=y/a CONFIG_MT753X_GSW=y' openwrt/target/linux/ramips/mt7621/config-5.10
+      - name: 替换hnat驱动，替换ramips
+        run: |
+          rm -rf openwrt/target/linux/ramips/dts/mt7621_hiwifi_hc5962.dts
+          rm -rf openwrt/target/linux/ramips/mt7621/base-files/etc/board.d/02_network
+          cp files/LEDE-hnat-02network-dst/mt7621_hiwifi_hc5962.dts openwrt/target/linux/ramips/dts
+          cp files/LEDE-hnat-02network-dst/02_network openwrt/target/linux/ramips/mt7621/base-files/etc/board.d
+#          rm -rf openwrt/target/linux/ramips
+#          cp -r files/ramips openwrt/target/linux
+      - name: 升级feeds
+        run: cd openwrt && ./scripts/feeds update -a
+      - name: 安装feeds
+        run: cd openwrt && ./scripts/feeds install -a
+
+      - name: 替换和修改插件
+        run: |
+          # 替换原argon主题和argon-config主题设置
+          rm -rf openwrt/feeds/luci/themes/luci-theme-argon
+          rm -rf openwrt/feeds/luci/applications/luci-app-argon-config
+          git clone -b 18.06 https://github.com/kjrzxu/luci-theme-argon.git openwrt/feeds/luci/themes/luci-theme-argon
+          git clone -b 18.06 https://github.com/kjrzxu/luci-app-argon-config.git openwrt/feeds/luci/applications/luci-app-argon-config
+          # 替换update_cloudflare_com_v4.sh
+          rm -rf openwrt/feeds/packages/net/ddns-scripts/files/update_cloudflare_com_v4.sh
+          cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files
+          # 修改cloudflared
+          sed -i 's/2023.2.2/2024.3.0/g' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i 's/b0abaff125d29c517894f6ea74dcc7044c92500670463595ba9ff4950a1d2fc2/6e5fda072d81b2d40208a0d244b44aaf607f26709711e157e23f44f812594e93/g' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i '/init.d/d' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i '/cloudflared.config $(1)/d' openwrt/feeds/packages/net/cloudflared/Makefile
+          rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.init
+          rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.config
+          # 替换原msd_lite
+          rm -rf openwrt/feeds/packages/net/msd_lite
+          git clone https://github.com/kjrzxu/msd_lite.git openwrt/feeds/packages/net/msd_lite
+          # 替换automount自动共享设置文件
+          rm -rf openwrt/package/lean/automount/files/15-automount
+          cp -r files/15-automount openwrt/package/lean/automount/files
+          # 修改autosamba中samba4为samba并更改共享0777权限
+          sed -i 's/samba4/samba/g' openwrt/package/lean/autosamba/Makefile
+          sed -i 's/samba4/samba/g' openwrt/package/lean/autosamba/files/20-smb
+          sed -i 's/0666/0777/' openwrt/package/lean/autosamba/files/20-smb
+          # 修改硬盘休眠配置文件
+          sed -i 's#sda#/mnt/sda1#g' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
+          sed -i 's/10/5/g' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
+          sed -i 's/0/1/g' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
+          
+      - name: 修改插件名称和顺序
+        run: |
+          # 修改主页名称和顺序
+          sed -i 's/page.order  = 30/page.order  = 42/' openwrt/feeds/luci/modules/luci-mod-admin-full/luasrc/controller/admin/network.lua
+          sed -i '134s/50/43/' openwrt/feeds/luci/modules/luci-mod-admin-full/luasrc/controller/admin/network.lua
+          sed -i 's/_("Diagnostics"/_("网络诊断"/' openwrt/feeds/luci/modules/luci-mod-admin-full/luasrc/controller/admin/network.lua
+          sed -i 's/page.order  = 60/page.order  = 41/' openwrt/feeds/luci/modules/luci-mod-admin-full/luasrc/controller/admin/network.lua
+          sed -i 's/_("Scheduled Tasks"), 46/_("Scheduled Tasks"), 51/' openwrt/feeds/luci/modules/luci-mod-admin-full/luasrc/controller/admin/system.lua
+          sed -i 's#_("Backup / Flash Firmware"#_("备份升级"#' openwrt/feeds/luci/modules/luci-mod-admin-full/luasrc/controller/admin/system.lua
+          sed -i 's/_("Reboot"/_("系统重启"/' openwrt/feeds/luci/modules/luci-mod-admin-full/luasrc/controller/admin/system.lua
+          # 修改插件名称并调整顺序
+          #sed -i 's/_("ShadowSocksR Plus+"/_("科学上网"/' openwrt/feeds/helloworld/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
+          sed -i 's/_("OpenClash"/_("科学上网"/' openwrt/feeds/openclash/luci-app-openclash/luasrc/controller/openclash.lua
+          sed -i 's/_("Internet Access Schedule Control"/_("时间控制"/' openwrt/feeds/luci/applications/luci-app-accesscontrol/luasrc/controller/mia.lua
+          sed -i 's/"services"/"control"/g' openwrt/feeds/luci/applications/luci-app-accesscontrol/luasrc/controller/mia.lua
+          sed -i 's/services/control/g' openwrt/feeds/luci/applications/luci-app-accesscontrol/luasrc/view/mia/mia_status.htm
+          sed -i 's/_("ADBYBY Plus +"/_("广告屏蔽"/' openwrt/feeds/luci/applications/luci-app-adbyby-plus/luasrc/controller/adbyby.lua
+          sed -i 's/_("AliyunDrive WebDAV"/_("阿里云盘"/' openwrt/feeds/luci/applications/luci-app-aliyundrive-webdav/luasrc/controller/aliyundrive-webdav.lua
+          sed -i 's/"services"/"nas"/g' openwrt/feeds/luci/applications/luci-app-aliyundrive-webdav/luasrc/controller/aliyundrive-webdav.lua
+          sed -i 's/_("Argon Config"), 90/_("主题设置"), 80/' openwrt/feeds/luci/applications/luci-app-argon-config/luasrc/controller/argon-config.lua
+          sed -i 's#"IP/MAC Binding"), 45#"MAC绑定"), 65#' openwrt/feeds/luci/applications/luci-app-arpbind/luasrc/controller/arpbind.lua
+          sed -i 's/_("BaiduPCS Web"), 300/_("百度网盘"), 20/' openwrt/feeds/luci/applications/luci-app-baidupcs-web/luasrc/controller/baidupcs-web.lua
+          sed -i 's/_("Dynamic DNS"), 59/_("动态 DNS"), 105/' openwrt/feeds/luci/applications/luci-app-ddns/luasrc/controller/ddns.lua
+          sed -i 's/_("EASY MESH"), 60/_("简单MESH"), 80/' openwrt/feeds/luci/applications/luci-app-easymesh/luasrc/controller/easymesh.lua
+          sed -i 's/_("Firewall"), 60/_("Firewall"), 35/' openwrt/feeds/luci/applications/luci-app-firewall/luasrc/controller/firewall.lua
+          sed -i 's/_("Frp Setting"/_("内网穿透"/' openwrt/feeds/luci/applications/luci-app-frpc/luasrc/controller/frp.lua
+          sed -i 's/_("Guest-wifi"), 19/_("Guest-wifi"), 70/' openwrt/feeds/luci/applications/luci-app-guest-wifi/luasrc/controller/guest-wifi.lua
+          sed -i 's/_("HDD Idle"), 60/_("HDD Idle"), 70/' openwrt/feeds/luci/applications/luci-app-hd-idle/luasrc/controller/hd_idle.lua
+          sed -i 's/"services"/"nas"/g' openwrt/feeds/luci/applications/luci-app-hd-idle/luasrc/controller/hd_idle.lua
+          sed -i 's/_("omcproxy")/_("omcproxy"), 10/' openwrt/feeds/luci/applications/luci-app-omcproxy/luasrc/controller/omcproxy.lua
+          sed -i 's/"services"/"iptv"/g' openwrt/feeds/luci/applications/luci-app-omcproxy/luasrc/controller/omcproxy.lua
+          sed -i 's/"services"/"nas"/g' openwrt/feeds/luci/applications/luci-app-samba/luasrc/controller/samba.lua
+          sed -i 's/"services"/"nas"/g' openwrt/feeds/luci/applications/luci-app-samba4/luasrc/controller/samba4.lua
+          sed -i 's/"Socat"), 100/"端口转发"), 100/' openwrt/feeds/luci/applications/luci-app-socat/luasrc/controller/socat.lua
+          sed -i 's/"TTYD Terminal"), 10/"命令终端"), 55/' openwrt/feeds/luci/applications/luci-app-ttyd/luasrc/controller/terminal.lua
+          sed -i 's/"Turbo ACC Center"), 101/"网络加速"), 101/' openwrt/feeds/luci/applications/luci-app-turboacc/luasrc/controller/turboacc.lua
+          sed -i 's/_("udpxy")/_("IPTV单播"), 99/' openwrt/feeds/luci/applications/luci-app-udpxy/luasrc/controller/udpxy.lua
+          sed -i 's/_("uHTTPd")/_("WEB 管理"), 102/' openwrt/feeds/luci/applications/luci-app-uhttpd/luasrc/controller/uhttpd/uhttpd.lua
+          sed -i 's/_("Unblock Netease Music"), 50/_("网易歌曲"), 50/' openwrt/feeds/luci/applications/luci-app-unblockmusic/luasrc/controller/unblockmusic.lua
+          sed -i 's/_("UPnP")/_("UPnP转发"), 101/' openwrt/feeds/luci/applications/luci-app-upnp/luasrc/controller/upnp.lua
+          sed -i 's/_("USB Printer Server"), 50/_("USB 打印"), 100/' openwrt/feeds/luci/applications/luci-app-usb-printer/luasrc/controller/usb_printer.lua
+          sed -i 's/"网络存储"/"存储"/' openwrt/feeds/luci/applications/luci-app-usb-printer/po/zh-cn/usb-printer.po
+          sed -i 's/_("KMS Server"), 100/_("KMS 激活"), 110/' openwrt/feeds/luci/applications/luci-app-vlmcsd/luasrc/controller/vlmcsd.lua
+          sed -i 's/_("FTP Server")/_("FTP 服务"), 80/' openwrt/feeds/luci/applications/luci-app-vsftpd/luasrc/controller/vsftpd.lua
+          sed -i 's/"网络存储"/"存储"/' openwrt/feeds/luci/applications/luci-app-vsftpd/po/zh-cn/vsftpd.po
+          sed -i 's/"services"/"control"/g' openwrt/feeds/luci/applications/luci-app-wol/luasrc/controller/wol.lua
+
+      - name: 生成config内核编译
+        run: |
+          cd openwrt
+          rm -rf ./tmp && rm -rf ./.config
+          touch ./.config
+          # 机型设置:
+          cat >> .config <<EOF
+          CONFIG_TARGET_ramips=y
+          CONFIG_TARGET_ramips_mt7621=y
+          CONFIG_TARGET_ramips_mt7621_DEVICE_hiwifi_hc5962=y
+          EOF
+          # 常用插件
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_ipv6helper=y
+          CONFIG_PACKAGE_autosamba=y
+          CONFIG_PACKAGE_automount=y
+          #CONFIG_PACKAGE_cloudflared=y
+          CONFIG_PACKAGE_msd_lite=y
+          CONFIG_PACKAGE_ddns-scripts_cloudflare.com-v4=y
+          CONFIG_PACKAGE_xupnpd=y
+          CONFIG_PACKAGE_luci-theme-argon=y
+          CONFIG_PACKAGE_luci-app-argon-config=y
+          CONFIG_PACKAGE_luci-app-accesscontrol=y
+          CONFIG_PACKAGE_luci-app-adbyby-plus=y
+          CONFIG_PACKAGE_luci-app-advanced=y
+          CONFIG_PACKAGE_luci-app-arpbind=y
+          CONFIG_PACKAGE_luci-app-autoreboot=y
+          #CONFIG_PACKAGE_luci-app-cloudflared=y
+          CONFIG_PACKAGE_luci-app-control-speedlimit=y
+          CONFIG_PACKAGE_luci-app-control-weburl=y
+          CONFIG_PACKAGE_luci-app-ddns=y
+          CONFIG_PACKAGE_luci-app-diskman=y
+          CONFIG_PACKAGE_luci-app-easymesh=y
+          CONFIG_PACKAGE_luci-app-fileassistant=y
+          CONFIG_PACKAGE_luci-app-filetransfer=n
+          CONFIG_PACKAGE_luci-app-frpc=y
+          CONFIG_PACKAGE_luci-app-hd-idle=y
+          #CONFIG_PACKAGE_luci-app-iptvhelper=y
+          CONFIG_PACKAGE_luci-app-msd_lite=y
+          CONFIG_PACKAGE_luci-app-mwan3=y
+          CONFIG_PACKAGE_luci-app-nlbwmon=y
+          #CONFIG_PACKAGE_luci-app-omcproxy=y
+          CONFIG_PACKAGE_luci-app-openclash=y
+          #CONFIG_PACKAGE_luci-app-passwall=y
+          #CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Xray=y
+          CONFIG_PACKAGE_luci-app-ramfree=y
+          CONFIG_PACKAGE_luci-app-socat=y
+          CONFIG_PACKAGE_luci-app-ssr-plus=n
+          #CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Xray=y
+          #CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Trojan=y
+          CONFIG_PACKAGE_luci-app-syncdial=y
+          CONFIG_PACKAGE_luci-app-ttyd=y
+          CONFIG_PACKAGE_luci-app-turboacc=y
+          #CONFIG_PACKAGE_luci-app-udpxy=y
+          CONFIG_PACKAGE_luci-app-uhttpd=y
+          #CONFIG_PACKAGE_luci-app-unblockmusic=y
+          CONFIG_PACKAGE_luci-app-upnp=y
+          #CONFIG_PACKAGE_luci-app-usb-printer=y
+          CONFIG_PACKAGE_luci-app-vlmcsd=y
+          CONFIG_PACKAGE_luci-app-vsftpd=y
+          CONFIG_PACKAGE_luci-app-wol=y
+          CONFIG_PACKAGE_luci-app-wrtbwmon=y
+          CONFIG_PACKAGE_luci-app-zerotier=y
+          EOF
+          make defconfig
+      - name: 下载软件包
+        run: |
+          cd openwrt
+          make download -j8
+          find dl -size -1024c -exec rm -f {} \;
+      - name: 开始编译固件
+        run: |
+          cd openwrt
+          echo -e "$(nproc) thread build."
+          make -j$(($(nproc) + 1)) V=s
+      - name : 上传bin文件夹(固件+ipk)到 github actions
+        uses: actions/upload-artifact@v3
+        with:
+          name: OpenWrt_LEDE_hnat
+          path: openwrt/bin

@@ -1,0 +1,182 @@
+#
+# This is free software, lisence use MIT.
+# 
+# Copyright (C) 2019 P3TERX <https://p3terx.com>
+# Copyright (C) 2020 KFERMercer <KFER.Mercer@gmail.com>
+# 
+# <https://github.com/KFERMercer/OpenWrt-CI>
+#
+
+name: compile immortalwrt_hc5962
+
+on:
+#  push:
+#    branches: 
+#      - master
+#  schedule:
+#    - cron: 0 0 1 * *
+#  watch:
+#    types: started
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+      - name: 准备工作
+        uses: actions/checkout@master
+
+      - name: 部署编译环境
+        run: |
+          sudo apt update -y
+          sudo apt full-upgrade -y
+          sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+          bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+          git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev \
+          libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
+          mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools \
+          libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip \
+          vim wget xmlto xxd zlib1g-dev
+      - name: 下载OpenWrt源码
+        run: git clone https://github.com/immortalwrt/immortalwrt openwrt
+      - name: 下载插件
+        run: git clone -b immortalwrt https://github.com/kjrzxu/package openwrt/package/package
+      - name: 升级feeds
+        run: cd openwrt && ./scripts/feeds update -a
+      - name: 安装feeds
+        run: cd openwrt && ./scripts/feeds install -a
+      - name: 修改插件
+        run: |
+          # 删除下载的kjrzxu的packageg与原luci冲突和多余插件
+          rm -rf openwrt/feeds/luci/applications/luci-app-fileassistant
+          # 修改主题
+          #rm -rf openwrt/feeds/luci/themes/luci-theme-argon
+          #rm -rf openwrt/feeds/luci/applications/luci-app-argon-config
+          #git clone https://github.com/jerrykuku/luci-theme-argon.git openwrt/feeds/luci/themes/luci-theme-argon
+          #git clone https://github.com/jerrykuku/luci-app-argon-config.git openwrt/feeds/luci/applications/luci-app-argon-config
+          # 修改自动挂载
+          rm -rf openwrt/package/emortal/automount/files/15-automount
+          cp -r files/15-automount openwrt/package/emortal/automount/files
+          # 修改samba4为samba并更改共享权限为0777
+          sed -i 's/samba4/samba/g' openwrt/package/emortal/autosamba/Makefile
+          sed -i 's/samba4/samba/g' openwrt/package/emortal/autosamba/files/20-smb
+          sed -i 's/0666/0777/' openwrt/package/emortal/autosamba/files/20-smb
+          # 修改硬盘共享设置
+          sed -i 's#sda#/mnt/sda1#' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
+          # 更改accesscontrol时间控制分类
+          sed -i 's/"services"/"control"/g' openwrt/feeds/luci/applications/luci-app-accesscontrol/luasrc/controller/mia.lua
+          sed -i 's/services/control/g' openwrt/feeds/luci/applications/luci-app-accesscontrol/luasrc/view/mia/mia_status.htm
+          # 修改cloudflared冲突设置
+          sed -i '/cloudflared.init $/d' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i '/cloudflared.config $/d' openwrt/feeds/packages/net/cloudflared/Makefile
+          rm openwrt/feeds/packages/net/cloudflared/files/cloudflared.init
+          rm openwrt/feeds/packages/net/cloudflared/files/cloudflared.config
+          # 更改ImmortalWrt为OpenWrt
+          find openwrt/package -name '99*-chinese' -exec sed -i '/timezone/i\		set system.@system[0].hostname="OpenWrt"' {} \;
+          find openwrt/package -name '99*-chinese' -exec sed -i "/downloads/a\sed -i 's/ImmortalWrt/OpenWrt/' /lib/wifi/mac80211.sh" {} \;
+          find openwrt/package -name '99*-chinese' -exec sed -i "/downloads/a\sed -i 's/ImmortalWrt/OpenWrt/g' /etc/config/wireless" {} \;
+          find openwrt/package -name '99*-chinese' -exec sed -i "/downloads/a\sed -i 's/ImmortalWrt/OpenWrt/g' /etc/openwrt_release" {} \;
+          # 更改插件名称和顺序
+          find openwrt/package -path '*/i18n/*.po' -exec sed -i 's/msgstr "网络存储"/msgstr "存储"/' {} \;
+          find openwrt/feeds -path '*/menu.d/*.json' -exec sed -i 's#services/wol#control/wol#' {} \;
+          find openwrt/feeds -path '*/zh_Hans/base.po' -exec sed -i '7476s/msgstr "重启"/msgstr "系统重启"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "备份与升级"/msgstr "备份升级"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "OpenClash"/msgstr "科学上网"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "PassWall"/msgstr "科学上网"/' {} \;
+          find openwrt/feeds -path '*/controller/*.lua' -exec sed -i 's#"IP/MAC Binding"), 45#"MAC绑定"), 65#' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "上网时间控制"/msgstr "时间控制"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "广告屏蔽大师 Plus+"/msgstr "广告屏蔽"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "USB 打印服务器"/msgstr "USB 打印"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "Socat"/msgstr "端口转发"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "动态 DNS(DDNS)"/msgstr "动态 DNS"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "frp 客户端"/msgstr "内网穿透"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "UPnP"/msgstr "UPnP转发"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "uHTTPd"/msgstr "WEB 管理"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "终端"/msgstr "命令终端"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "KMS 服务器"/msgstr "KMS 激活"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "FTP 服务器"/msgstr "FTP 服务"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "MultiWAN 管理器"/msgstr "负载均衡"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "udpxy"/msgstr "IPTV单播"/' {} \;
+          #find openwrt/feeds -path '*/menu.d/*-ttyd.json' -exec sed -i "3/a\		"order": 40,/' {} \;
+
+      - name: 配置config文件
+        run: |
+          cd openwrt
+          rm -rf ./tmp && rm -rf ./.config
+          touch ./.config
+          # 机型设置:
+          cat >> .config <<EOF
+          CONFIG_TARGET_ramips=y
+          CONFIG_TARGET_ramips_mt7621=y
+          CONFIG_TARGET_ramips_mt7621_DEVICE_hiwifi_hc5962=y
+          EOF
+          # 常用插件
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_default-settings-chn=y
+          CONFIG_PACKAGE_ipv6helper=y
+          CONFIG_PACKAGE_autosamba=y
+          CONFIG_PACKAGE_automount=y
+          CONFIG_PACKAGE_cloudflared=y
+          CONFIG_PACKAGE_msd_lite=y
+          CONFIG_PACKAGE_ddns-scripts-cloudflare=y
+          CONFIG_PACKAGE_xupnpd=y
+          CONFIG_PACKAGE_luci-theme-argon=y
+          CONFIG_PACKAGE_luci-app-argon-config=y
+          CONFIG_PACKAGE_luci-app-accesscontrol=y
+          CONFIG_PACKAGE_luci-app-adbyby-plus=y
+          CONFIG_PACKAGE_luci-app-advanced=y
+          CONFIG_PACKAGE_luci-app-arpbind=y
+          CONFIG_PACKAGE_luci-app-autoreboot=y
+          #CONFIG_PACKAGE_luci-app-cloudflared=y
+          CONFIG_PACKAGE_luci-app-control-speedlimit=y
+          CONFIG_PACKAGE_luci-app-control-weburl=y
+          CONFIG_PACKAGE_luci-app-ddns=y
+          CONFIG_PACKAGE_luci-app-diskman=y
+          CONFIG_PACKAGE_luci-app-easymesh=y
+          #CONFIG_PACKAGE_luci-app-eqos=y
+          CONFIG_PACKAGE_luci-app-fileassistant=y
+          CONFIG_PACKAGE_luci-app-frpc=y
+          CONFIG_PACKAGE_luci-app-hd-idle=y
+          #CONFIG_PACKAGE_luci-app-iptvhelper=y
+          CONFIG_PACKAGE_luci-app-mwan3=y
+          CONFIG_PACKAGE_luci-app-nlbwmon=y
+          #CONFIG_PACKAGE_luci-app-omcproxy=y
+          CONFIG_PACKAGE_luci-app-openclash=y
+          #CONFIG_PACKAGE_luci-app-passwall=y
+          #CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Xray=y
+          CONFIG_PACKAGE_luci-app-ramfree=y
+          CONFIG_PACKAGE_luci-app-socat=y
+          CONFIG_PACKAGE_luci-app-syncdial=y
+          CONFIG_PACKAGE_luci-app-ttyd=y
+          CONFIG_PACKAGE_luci-app-turboacc=y
+          CONFIG_PACKAGE_luci-app-msd_lite=y
+          CONFIG_PACKAGE_luci-app-uhttpd=y
+          #CONFIG_PACKAGE_luci-app-unblockmusic=y
+          CONFIG_PACKAGE_luci-app-upnp=y
+          #CONFIG_PACKAGE_luci-app-usb-printer=y
+          CONFIG_PACKAGE_luci-app-vlmcsd=y
+          CONFIG_PACKAGE_luci-app-vsftpd=y
+          CONFIG_PACKAGE_luci-app-wol=y
+          CONFIG_PACKAGE_luci-app-wrtbwmon=y
+          CONFIG_PACKAGE_luci-app-zerotier=y
+          EOF
+          make defconfig
+      - name: 下载软件包
+        run: |
+          cd openwrt
+          make download -j8
+          find dl -size -1024c -exec rm -f {} \;
+      - name: 编译固件
+        run: |
+          cd openwrt
+          echo -e "$(nproc) thread ../files."
+          make -j$(($(nproc) + 1)) V=s
+          #make -j1 V=s
+      - name : 上传bin文件夹到 github actions
+        uses: actions/upload-artifact@master
+        with:
+          name: OpenWrt_immortalwrt_hc5962
+          path: openwrt/bin
