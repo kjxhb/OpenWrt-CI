@@ -78,10 +78,9 @@ jobs:
           rm -rf openwrt/feeds/packages/net/ddns-scripts/files/update_cloudflare_com_v4.sh
           cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files
           # 修改cloudflared
-          sed -i 's/2023.2.2/2024.9.1/g' openwrt/feeds/packages/net/cloudflared/Makefile
-          sed -i 's/b0abaff125d29c517894f6ea74dcc7044c92500670463595ba9ff4950a1d2fc2/f96b703ea848bc538322eb957749b0b2395e0cf83213cf310cbde0a3f598eac4/g' openwrt/feeds/packages/net/cloudflared/Makefile
-          sed -i '/init.d/d' openwrt/feeds/packages/net/cloudflared/Makefile
-          sed -i '/cloudflared.config $(1)/d' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i 's/VERSION:=.*/VERSION:=2024.9.1/g' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i 's/HASH:=.*/HASH:=f96b703ea848bc538322eb957749b0b2395e0cf83213cf310cbde0a3f598eac4/' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i '/init.d/d;/cloudflared.config $(1)/d;' openwrt/feeds/packages/net/cloudflared/Makefile
           rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.init
           rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.config
           # 替换autosamba
