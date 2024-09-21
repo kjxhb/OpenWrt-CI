@@ -8,6 +8,7 @@
 #20240913更新：1、取消替换tailscale。
 #20240914更新：1、更新cloudflared版本为2024.9.1。
 #20240920更新：1、更换源码仓库为克隆的LEDE仓库。
+#20240921更新：1、更新tailscale版本为1.72.1；2、删除编译代码V=s。
 
 name: compile LEDE_hc5962_dsa
 
@@ -74,6 +75,8 @@ jobs:
           # 替换tailscale
           #rm -rf openwrt/feeds/packages/net/tailscale
           #cp -r files/tailscale openwrt/feeds/packages/net
+          sed -i 's/VERSION:=.*/VERSION:=1.72.1/g' openwrt/feeds/packages/net/tailscale/Makefile
+          sed -i 's/HASH:=.*/HASH:=21b529e85144f526b61e0998c8b7885d53f17cba21252e5c7252c4014f5f507b/' openwrt/feeds/packages/net/tailscale/Makefile
           # 替换update_cloudflare_com_v4.sh
           rm -rf openwrt/feeds/packages/net/ddns-scripts/files/update_cloudflare_com_v4.sh
           cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files
@@ -189,9 +192,9 @@ jobs:
         run: |
           cd openwrt
           echo -e "$(nproc) thread ../files."
-          make -j$(($(nproc) + 1)) V=s
+          make -j$(($(nproc) + 1))
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: OpenWrt_LEDE_hc5962_dsa-20240920
+          name: OpenWrt_LEDE_hc5962_dsa-20240921
           path: openwrt/bin/targets/ramips/mt7621
