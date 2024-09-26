@@ -10,6 +10,7 @@
 #20240914更新：1、更新cloudflared版本为2024.9.1。
 #20240920更新：1、更换源码仓库为克隆的LEDE仓库。
 #20240921更新：1、更新tailscale版本为1.72.1；2、删除编译代码V=s。
+#20240924更新：1、恢复LEDE仓库；2、常规更新。
 
 name: compile LEDE_hc5962_hnat
 
@@ -49,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 下载源码
-        run: git clone --depth 1 https://github.com/kjxhb/lede openwrt
+        run: git clone --depth 1 https://github.com/coolsnowwolf/lede openwrt
 #      - name: 更改5.10内核
 #        run: sed -i '/USE_ELF_REL=y/a CONFIG_MT753X_GSW=y' openwrt/target/linux/ramips/mt7621/config-5.10
       - name: 替换hnat驱动，替换ramips
@@ -204,5 +205,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: OpenWrt_LEDE_hc5962_hnat-20240921
+          name: OpenWrt_LEDE_hc5962_hnat-20240924
           path: openwrt/bin/targets/ramips/mt7621

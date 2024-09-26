@@ -8,6 +8,7 @@
 # 20240917更新：1、更新cloudflared版本为2024.9.1。
 # 20240920更新：1、更换源码仓库为克隆的LEDE仓库。
 # 20240921更新：1、更新tailscale版本为1.72.1；2、删除编译代码V=s。
+# 20240924更新：1、恢复LEDE仓库；2、常规更新。
 
 name: compile LEDE_RAX3000M_dsa
 
@@ -47,7 +48,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 下载源码
-        run: git clone --depth 1 https://github.com/kjxhb/lede openwrt
+        run: git clone --depth 1 https://github.com/coolsnowwolf/lede openwrt
       - name: 升级feeds
         run: cd openwrt && ./scripts/feeds update -a
       - name: 安装feeds
@@ -197,5 +198,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: LEDE_RAX3000M_dsa-20240921
+          name: LEDE_RAX3000M_dsa-20240924
           path: openwrt/bin/targets
