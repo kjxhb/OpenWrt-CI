@@ -9,6 +9,7 @@
 # 20240920更新：1、更换源码仓库为克隆的LEDE仓库。
 # 20240921更新：1、更新tailscale版本为1.72.1；2、删除编译代码V=s。
 # 20240924更新：1、恢复LEDE仓库；2、常规更新。
+# 20241008更新：1、更换openclash版本为dev版本；2、常规更新。
 
 name: compile LEDE_RAX3000M_dsa
 
@@ -57,7 +58,7 @@ jobs:
       - name: 替换和修改插件
         run: |
           # 添加插件
-          git clone --depth 1 https://github.com/vernesong/OpenClash openwrt/package/OpenClash
+          git clone -b dev --depth 1 https://github.com/vernesong/OpenClash openwrt/package/OpenClash
           cp -r files/luci-app-advancedsetting openwrt/package
           cp -r files/luci-app-cloudflared openwrt/package
           cp -r files/luci-app-fileassistant openwrt/package
@@ -198,5 +199,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: LEDE_RAX3000M_dsa-20240924
+          name: LEDE_RAX3000M_dsa-20241008
           path: openwrt/bin/targets
