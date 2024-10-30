@@ -10,6 +10,7 @@
 # 20240921更新：1、更新tailscale版本为1.72.1；2、删除编译代码V=s。
 # 20240924更新：1、恢复LEDE仓库；2、常规更新。
 # 20241008更新：1、更换openclash版本为dev版本；2、常规更新。
+# 20241030更新：1、替换tailscale；2、常规更新。
 
 name: compile LEDE_RAX3000M_dsa
 
@@ -72,10 +73,10 @@ jobs:
           rm -rf openwrt/feeds/packages/net/msd_lite
           cp -r files/msd_lite openwrt/feeds/packages/net
           # 替换tailscale
-          #rm -rf openwrt/feeds/packages/net/tailscale
-          #cp -r files/tailscale openwrt/feeds/packages/net
-          sed -i 's/VERSION:=.*/VERSION:=1.72.1/g' openwrt/feeds/packages/net/tailscale/Makefile
-          sed -i 's/HASH:=.*/HASH:=21b529e85144f526b61e0998c8b7885d53f17cba21252e5c7252c4014f5f507b/' openwrt/feeds/packages/net/tailscale/Makefile
+          rm -rf openwrt/feeds/packages/net/tailscale
+          cp -r files/tailscale openwrt/feeds/packages/net
+          #sed -i 's/VERSION:=.*/VERSION:=1.72.1/g' openwrt/feeds/packages/net/tailscale/Makefile
+          #sed -i 's/HASH:=.*/HASH:=21b529e85144f526b61e0998c8b7885d53f17cba21252e5c7252c4014f5f507b/' openwrt/feeds/packages/net/tailscale/Makefile
           # 替换update_cloudflare_com_v4.sh
           rm -rf openwrt/feeds/packages/net/ddns-scripts/files/update_cloudflare_com_v4.sh
           cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files
@@ -199,5 +200,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: LEDE_RAX3000M_dsa-20241008
+          name: LEDE_RAX3000M_dsa-20241030
           path: openwrt/bin/targets
