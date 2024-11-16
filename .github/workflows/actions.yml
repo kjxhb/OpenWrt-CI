@@ -1,6 +1,6 @@
 # SSH连接Actions：终端（或CMD）输入ssh KThFLfxpPp9sR9459pcGPTZ4X@nyc1.tmate.io登陆，web shell输入：https://tmate.io/t/KThFLfxpPp9sR9459pcGPTZ4X。
-# web shell黑屏：输入Crtl+C，结束输入Ctrl+D,将继续下一个流程。
-# 输入/tmp/keepalive 关闭15分钟退出。
+# 开始或web shell黑屏：输入：Crtl+C，结束输入：Ctrl+D,将继续下一个流程。
+# 输入：touch /tmp/keepalive 关闭15分钟退出。
 
 name: Actions
 
