@@ -1,0 +1,182 @@
+# 
+# Copyright (C) 2019 P3TERX <https://p3terx.com>
+# 
+# <https://github.com/KFERMercer/OpenWrt-CI>
+
+name: compile LEDE_RAX3000M_23.05
+
+on:
+#  push:
+#    branches: 
+#      - main
+#  schedule:
+#    - cron: 0 0 1 * *
+#  watch:
+#    types: started
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+      - name: 空间清理和初始化环境
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          docker rmi `docker images -q`
+          sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android
+          sudo -E apt-mark hold grub-efi-amd64-signed
+          sudo -E apt update
+          sudo -E apt -y purge azure-cli* docker* ghc* zulu* llvm* firefox google* dotnet* powershell* openjdk* mysql* php* mongodb* dotnet* snap*
+          sudo -E apt -y full-upgrade
+          sudo -E apt -y install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+          sudo -E systemctl daemon-reload
+          sudo -E apt -y autoremove --purge
+          sudo -E apt clean
+          sudo -E timedatectl set-timezone "Asia/Shanghai"
+
+      - name: 检出仓库代码
+        uses: actions/checkout@v4
+
+      - name: 下载源码
+        run: git clone --depth 1 https://github.com/coolsnowwolf/lede openwrt
+      - name: 升级feeds
+        run: cd openwrt && ./scripts/feeds update -a
+      - name: 安装feeds
+        run: cd openwrt && ./scripts/feeds install -a
+        
+      - name: 替换和修改插件
+        run: |
+          # 添加替换插件
+          git clone -b dev --depth 1 https://github.com/vernesong/OpenClash openwrt/package/OpenClash
+          rm -rf openwrt/feeds/luci/applications/luci-app-openclash
+          rm -rf openwrt/feeds/luci/applications/luci-app-advancedsetting
+          rm -rf openwrt/feeds/luci/applications/luci-app-fileassistant
+          cp -r files/luci-app-advancedsetting openwrt/feeds/luci/applications
+          cp -r files/luci-app-fileassistant openwrt/feeds/luci/applications
+          #cp -r files/istore openwrt/package
+          # 替换update_cloudflare_com_v4.sh
+          rm -rf openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns/update_cloudflare_com_v4.sh
+          cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns
+          # 修改autosamba共享0777权限
+          sed -i 's/0666/0777/' openwrt/package/lean/autosamba/files/20-smb
+          # 修改硬盘休眠配置文件
+          sed -i 's#sda#/mnt/sda1#g' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
+          
+          # 修改插件顺序
+          find openwrt/feeds/luci -path '*/luci-mod-system.json' -exec sed -i 's/"order": 46/"order": 48/' {} \;
+          find openwrt/feeds/luci -path '*/luci-mod-system.json' -exec sed -i 's/"order": 50/"order": 47/' {} \;
+          find openwrt/feeds/luci -path '*/luci-app-firewall.json' -exec sed -i 's/"order": 60/"order": 35/' {} \;
+
+          # 修改插件分类
+          find openwrt/feeds/luci -path '*/luci-app-cloudflared.json' -exec sed -i 's#admin/vpn#admin/services#g' {} \;
+          find openwrt/feeds/luci -path '*/luci-app-hd-idle.json' -exec sed -i 's#admin/services#admin/nas#g' {} \;
+          find openwrt/feeds/luci -path '*/luci-app-nlbwmon.json' -exec sed -i 's#admin/services/#admin/#g' {} \;
+          find openwrt/feeds/luci -path '*/luci-app-samba4.json' -exec sed -i 's#admin/services#admin/nas#g' {} \;
+          find openwrt/feeds/luci -path '*/luci-app-ttyd.json' -exec sed -i 's#admin/services#admin/system#g' {} \;
+
+          # 修改插件名称
+          find openwrt/package/OpenClash -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "OpenClash"/msgstr "科学上网"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/base.po' -exec sed -i '7710s/msgstr "重启"/msgstr "系统重启"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's#msgstr "备份与升级"#msgstr "备份升级"#' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "上网时间控制"/msgstr "时间控制"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's#msgstr "IP/MAC绑定"#msgstr "MAC绑定"#' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "Cloudflare 零信任隧道"/msgstr "Cloudflare"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "easymesh"/msgstr "简单MESH"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "frp 客户端"/msgstr "Frp客户端"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "诊断"/msgstr "网络诊断"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "带宽监控"/msgstr "带宽"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "MultiWAN 管理器"/msgstr "负载均衡"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "Socat"/msgstr "端口转发"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "Tailscale"/msgstr "内网穿透"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "终端"/msgstr "命令终端"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "Turbo ACC 网络加速"/msgstr "网络加速"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "uHTTPd"/msgstr "WEB 管理"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "UPnP"/msgstr "UPnP转发"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "USB 打印服务器"/msgstr "USB 打印"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "KMS 服务器"/msgstr "KMS 激活"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "网络存储"/msgstr "存储"/' {} \;
+          find openwrt/feeds -path '*/zh_Hans/*.po' -exec sed -i 's/msgstr "FTP 服务器"/msgstr "FTP 服务"/' {} \;
+          
+      - name: 生成config内核编译
+        run: |
+          cd openwrt
+          rm -rf ./tmp && rm -rf ./.config
+          touch ./.config
+          # 机型设置:
+          cat >> .config <<EOF
+          CONFIG_TARGET_mediatek=y
+          CONFIG_TARGET_mediatek_filogic=y
+          CONFIG_TARGET_mediatek_filogic_DEVICE_cmcc_rax3000m-nand=y
+          EOF
+          # 常用插件
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_ipv6helper=y
+          CONFIG_PACKAGE_autosamba=y
+          CONFIG_PACKAGE_automount=y
+          CONFIG_PACKAGE_cloudflared=y
+          CONFIG_PACKAGE_git-http=y
+          CONFIG_PACKAGE_msd_lite=y
+          CONFIG_PACKAGE_ddns-scripts-cloudflare=y
+          CONFIG_PACKAGE_tailscale=y
+          CONFIG_PACKAGE_luci-theme-argon=y
+          CONFIG_PACKAGE_luci-app-accesscontrol=y
+          CONFIG_PACKAGE_luci-app-adbyby-plus=y
+          CONFIG_PACKAGE_luci-app-advancedsetting=y
+          CONFIG_PACKAGE_luci-app-arpbind=y
+          CONFIG_PACKAGE_luci-app-autoreboot=y
+          CONFIG_PACKAGE_luci-app-cloudflared=y
+          CONFIG_PACKAGE_luci-app-ddns=y
+          CONFIG_PACKAGE_luci-app-diskman=y
+          CONFIG_PACKAGE_luci-app-easymesh=y
+          CONFIG_PACKAGE_luci-app-fileassistant=y
+          CONFIG_PACKAGE_luci-app-filetransfer=n
+          CONFIG_PACKAGE_luci-app-frpc=y
+          CONFIG_PACKAGE_luci-app-hd-idle=y
+          #CONFIG_PACKAGE_luci-app-linkease=y
+          CONFIG_PACKAGE_luci-app-msd_lite=y
+          CONFIG_PACKAGE_luci-app-mwan3=y
+          CONFIG_PACKAGE_luci-app-nlbwmon=y
+          CONFIG_PACKAGE_luci-app-openclash=y
+          #CONFIG_PACKAGE_luci-app-quickstart=y
+          CONFIG_PACKAGE_luci-app-ramfree=y
+          CONFIG_PACKAGE_luci-app-smartdns=y
+          CONFIG_PACKAGE_luci-app-socat=y
+          #CONFIG_PACKAGE_luci-app-store=y
+          CONFIG_PACKAGE_luci-app-syncdial=y
+          CONFIG_PACKAGE_luci-app-tailscale=y
+          CONFIG_PACKAGE_luci-app-ttyd=y
+          CONFIG_PACKAGE_luci-app-turboacc=y
+          CONFIG_PACKAGE_luci-app-uhttpd=y
+          CONFIG_PACKAGE_luci-app-upnp=y
+          CONFIG_PACKAGE_luci-app-vlmcsd=y
+          CONFIG_PACKAGE_luci-app-vsftpd=y
+          CONFIG_PACKAGE_luci-app-wol=y
+          CONFIG_PACKAGE_luci-app-wrtbwmon=y
+          CONFIG_PACKAGE_luci-app-zerotier=n
+          CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-webui=n
+          CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-ng=n
+          CONFIG_PACKAGE_luci-app-unblockmusic_INCLUDE_UnblockNeteaseMusic_Go=n
+          EOF
+          make defconfig
+      
+      - name: 下载软件包
+        run: |
+          cd openwrt
+          make download -j8
+          find dl -size -1024c -exec rm -f {} \;
+      
+      - name: 编译固件
+        run: |
+          cd openwrt
+          echo -e "$(nproc) thread ../files."
+          make -j$(($(nproc) + 1))
+      
+      - name : 上传bin文件夹(固件+ipk)到 github actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: LEDE_RAX3000M_23.05-20241118
+          path: openwrt/bin
