@@ -1,0 +1,6 @@
+
+msgid "Cloudflared"
+msgstr "外网访问"
+
+msgid "Cloudflared-Cloudflared"
+msgstr "外网访问-Cloudflared"

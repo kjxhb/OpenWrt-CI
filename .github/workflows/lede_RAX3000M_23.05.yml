@@ -3,6 +3,8 @@
 # 
 # <https://github.com/KFERMercer/OpenWrt-CI>
 
+# 20241119更新：1、替换luci-app-cloudflared。
+
 name: compile LEDE_RAX3000M_23.05
 
 on:
@@ -49,7 +51,7 @@ jobs:
         
       - name: 替换和修改插件
         run: |
-          # 添加替换插件
+          # 替换插件
           git clone -b dev --depth 1 https://github.com/vernesong/OpenClash openwrt/package/OpenClash
           rm -rf openwrt/feeds/luci/applications/luci-app-openclash
           rm -rf openwrt/feeds/luci/applications/luci-app-advancedsetting
@@ -57,6 +59,10 @@ jobs:
           cp -r files/luci-app-advancedsetting openwrt/feeds/luci/applications
           cp -r files/luci-app-fileassistant openwrt/feeds/luci/applications
           #cp -r files/istore openwrt/package
+          # 替换cloudflared
+          rm -rf openwrt/feeds/luci/applications/luci-app-cloudflared
+          cp -r files/luci-app-cloudflared openwrt/feeds/luci/applications
+          sed -i '/init.d/d;/cloudflared.config $(1)/d;' openwrt/feeds/packages/net/cloudflared/Makefile
           # 替换update_cloudflare_com_v4.sh
           rm -rf openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns/update_cloudflare_com_v4.sh
           cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns
@@ -178,5 +184,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: LEDE_RAX3000M_23.05-20241118
+          name: LEDE_RAX3000M_23.05-20241119
           path: openwrt/bin

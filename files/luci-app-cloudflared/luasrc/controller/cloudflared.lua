@@ -5,7 +5,7 @@ function index()
 return
 end
 
-entry({"admin", "services", "cloudflared"},firstchild(), _("Cloudflared"), 110).dependent = false
+entry({"admin", "services", "cloudflared"},firstchild(), _("Cloudflared"), 80).dependent = false
 
 entry({"admin", "services", "cloudflared", "general"},cbi("cloudflared/settings"), _("配置"), 1)
 entry({"admin", "services", "cloudflared", "log"},form("cloudflared/info"), _("日志"), 2)
