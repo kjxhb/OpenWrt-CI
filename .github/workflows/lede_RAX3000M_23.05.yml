@@ -4,6 +4,7 @@
 # <https://github.com/KFERMercer/OpenWrt-CI>
 
 # 20241119更新：1、替换luci-app-cloudflared。
+# 20241130更新：1、替换luci-theme-argon的cascade.css。
 
 name: compile LEDE_RAX3000M_23.05
 
@@ -59,6 +60,9 @@ jobs:
           cp -r files/luci-app-advancedsetting openwrt/feeds/luci/applications
           cp -r files/luci-app-fileassistant openwrt/feeds/luci/applications
           #cp -r files/istore openwrt/package
+          # 替换luci-theme-argon的cascade.css
+          rm -rf openwrt/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/css/cascade.css
+          cp -r files/cascade.css openwrt/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/css
           # 替换cloudflared
           rm -rf openwrt/feeds/luci/applications/luci-app-cloudflared
           cp -r files/luci-app-cloudflared openwrt/feeds/luci/applications
@@ -184,5 +188,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: LEDE_RAX3000M_23.05-20241119
+          name: LEDE_RAX3000M_23.05-20241130
           path: openwrt/bin
