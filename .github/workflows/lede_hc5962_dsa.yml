@@ -62,7 +62,7 @@ jobs:
         run: |
           # 修复batman-adv编译错误
           rm -rf openwrt/feeds/routing/batman-adv
-          cp -r files/hc5952-lede/batman-adv openwrt/feeds/routing
+          cp -r files/hc5962-lede/batman-adv openwrt/feeds/routing
           # 添加插件
           git clone --depth 1 https://github.com/vernesong/OpenClash openwrt/package/OpenClash
           cp -r files/luci-app-advancedsetting openwrt/package
