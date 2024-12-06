@@ -12,6 +12,7 @@
 # 20241008更新：1、更换openclash版本为dev版本；2、常规更新。
 # 20241116更新：1、修复luci源码为18.06；2、更新tailscale为1.76.1；3、更新cloudflared版本为2024.11.0；4、替换argon主题为github原作者仓库；5、常规更新。
 # 20241205更新：1、替换argon主题为luci-theme-argon-lede；2、更新tailscale为1.76.6；3、更新cloudflared版本为2024.11.1；4、修复ddns-scripts-cloudflare；5、替换ksmbd-tools；6、回退LEDE源码为2024年12月3日。
+# 20241206更新：1、替换autosamba默认插件为luci-app-samba4；2、取消回退LEDE源码为2024年12月3日。
 
 name: compile LEDE_RAX3000M_18.06
 
@@ -55,7 +56,7 @@ jobs:
       - name: 修改源码
         run: |
           cd openwrt
-          git reset --hard 2ce0dfdc4167e9a564642927ac5f542ddcc4b1f2
+          #git reset --hard 2ce0dfdc4167e9a564642927ac5f542ddcc4b1f2
           sed -i '/luci.git/s/;openwrt-23.05$//' feeds.conf.default
       - name: 升级feeds
         run: cd openwrt && ./scripts/feeds update -a
@@ -72,9 +73,8 @@ jobs:
           cp -r files/luci-app-msd_lite openwrt/package
           cp -r files/luci-theme-argon-lede openwrt/package
           #cp -r files/istore openwrt/package
-          # 替换ksmbd-tools
-          rm -rf openwrt/feeds/packages/net/ksmbd-tools
-          cp -r files/ksmbd-tools openwrt/feeds/packages/net
+          # 替换autosamba默认插件
+          sed -i '/default PACKAGE/s/_KSMBD/_SAMBA4/' openwrt/package/lean/autosamba/Makefile
           # 替换cpuinfo
           rm -rf openwrt/package/lean/autocore/files/arm/sbin/cpuinfo
           cp -r files/rax3000m-lede/cpuinfo openwrt/package/lean/autocore/files/arm/sbin
@@ -207,5 +207,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: LEDE_RAX3000M_18.06-20241205
+          name: LEDE_RAX3000M_18.06-20241206
           path: openwrt/bin
