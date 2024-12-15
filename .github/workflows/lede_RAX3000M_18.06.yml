@@ -14,7 +14,7 @@
 # 20241205更新：1、替换argon主题为luci-theme-argon-lede；2、更新tailscale为1.76.6；3、更新cloudflared版本为2024.11.1；4、修复ddns-scripts-cloudflare；5、替换ksmbd-tools；6、回退LEDE源码为2024年12月3日。
 # 20241206更新：1、替换autosamba默认插件为luci-app-samba4；2、取消回退LEDE源码为2024年12月3日。
 # 20241215更新：1、恢复autosamba默认插件为luci-app-ksmbd，替换ksmbd-tools，添加ksmbd-avahi-service；2、替换修改20-smb脚本为ksmbd自动挂载；3、替换15-automount脚本、wsdd2。
-# 20241215更新：1、恢复autosamba默认插件为luci-app-samba4。
+# 20241215更新：1、恢复autosamba默认插件为luci-app-samba。
 
 name: compile LEDE_RAX3000M_18.06
 
@@ -79,8 +79,8 @@ jobs:
           rm -rf openwrt/package/lean/autosamba/files/20-smb
           cp -r files/20-smb openwrt/package/lean/autosamba/files
           # 修改autosamba
-          sed -i '/default PACKAGE/s/_KSMBD/_SAMBA4/' openwrt/package/lean/autosamba/Makefile
-          #sed -i 's/samba4/ksmbd/g' openwrt/package/lean/autosamba/files/20-smb
+          sed -i '/default PACKAGE/s/_KSMBD/_SAMBA3/' openwrt/package/lean/autosamba/Makefile
+          sed -i 's/samba4/samba/g' openwrt/package/lean/autosamba/files/20-smb
           #sed -i 's/sambashare/share/g' openwrt/package/lean/autosamba/files/20-smb
           #sed -i '/toption inherit/d' openwrt/package/lean/autosamba/files/20-smb
           # 替换ksmbd-tools，添加ksmbd-avahi-service
@@ -224,5 +224,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: LEDE_RAX3000M_18.06-20241215
+          name: LEDE_RAX3000M_18.06-20241215-samba
           path: openwrt/bin
