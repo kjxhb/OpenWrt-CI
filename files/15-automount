@@ -1,26 +1,28 @@
 #!/bin/sh
 
 case "$ACTION" in
-        add)
-                for i in $(ls /dev/ | grep 'sd[a-z][1-9]')
-                do
-                        mkdir -p /mnt/$i
-                        mount -o iocharset=utf8,rw /dev/$i /mnt/$i
-                        if [ $? -ne 0 ]
-                        then
-                                mount -o rw /dev/$i /mnt/$i
-                        fi
-                done
-                ;;
-        remove)
-                MOUNT=`mount | grep -o '/mnt/sd[a-z][1-9]'`
-                for i in $MOUNT
-                do
-                        umount $i
-                        if [ $? -eq 0 ]
-                        then
-                                rm -r $i
-                        fi
-                done
-                ;;
+    add)
+        for i in $(ls /dev/ | grep 'sd[a-z][1-9]')
+        do
+            if ! mount | grep -o '/mnt/$i'
+            then
+                mkdir -p /mnt/$i
+                mount -o iocharset=utf8,rw,discard /dev/$i /mnt/$i
+                if [ $? -ne 0 ]
+                then
+                    mount -o rw,discard /dev/$i /mnt/$i
+                fi
+            fi
+        done
+        ;;
+    remove)
+        for i in $(ls /mnt/ | grep 'sd[a-z][1-9]')
+        do
+            if ! ls /dev/ | grep '$i' 
+            then
+                umount /mnt/$i
+                rm -r /mnt/$i
+            fi
+        done
+        ;;
 esac

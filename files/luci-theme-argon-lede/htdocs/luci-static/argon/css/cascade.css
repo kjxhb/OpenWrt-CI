@@ -2676,7 +2676,7 @@ td > .ifacebadge,
   display: inline-flex;
   flex-direction: column;
   line-height: 1.2em;
-  min-width: 100px;
+  min-width: 125px;
   overflow: hidden;
 }
 .ifacebox-head {

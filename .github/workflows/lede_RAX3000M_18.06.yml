@@ -13,6 +13,7 @@
 # 20241116更新：1、修复luci源码为18.06；2、更新tailscale为1.76.1；3、更新cloudflared版本为2024.11.0；4、替换argon主题为github原作者仓库；5、常规更新。
 # 20241205更新：1、替换argon主题为luci-theme-argon-lede；2、更新tailscale为1.76.6；3、更新cloudflared版本为2024.11.1；4、修复ddns-scripts-cloudflare；5、替换ksmbd-tools；6、回退LEDE源码为2024年12月3日。
 # 20241206更新：1、替换autosamba默认插件为luci-app-samba4；2、取消回退LEDE源码为2024年12月3日。
+# 20241215更新：1、恢复autosamba默认插件为luci-app-ksmbd，替换ksmbd-tools，添加ksmbd-avahi-service；2、替换修改20-smb脚本为ksmbd自动挂载；3、替换15-automount脚本、wsdd2。
 
 name: compile LEDE_RAX3000M_18.06
 
@@ -73,8 +74,24 @@ jobs:
           cp -r files/luci-app-msd_lite openwrt/package
           cp -r files/luci-theme-argon-lede openwrt/package
           #cp -r files/istore openwrt/package
-          # 替换autosamba默认插件
-          sed -i '/default PACKAGE/s/_KSMBD/_SAMBA4/' openwrt/package/lean/autosamba/Makefile
+          # 替换autosamba的20-smb
+          rm -rf openwrt/package/lean/autosamba/files/20-smb
+          cp -r files/20-smb openwrt/package/lean/autosamba/files
+          # 修改autosamba
+          #sed -i '/default PACKAGE/s/_KSMBD/_SAMBA4/' openwrt/package/lean/autosamba/Makefile
+          sed -i 's/samba4/ksmbd/g' openwrt/package/lean/autosamba/files/20-smb
+          sed -i 's/sambashare/share/g' openwrt/package/lean/autosamba/files/20-smb
+          sed -i '/toption inherit/d' openwrt/package/lean/autosamba/files/20-smb
+          # 替换ksmbd-tools，添加ksmbd-avahi-service
+          rm -rf openwrt/feeds/packages/net/ksmbd-tools
+          cp -r files/ksmbd-tools openwrt/feeds/packages/net
+          sed -i 's/-server/-server +ksmbd-avahi-service/' openwrt/feeds/luci/applications/luci-app-ksmbd/Makefile
+          # 替换wsdd2
+          rm -rf openwrt/feeds/packages/net/wsdd2
+          cp -r files/wsdd2 openwrt/feeds/packages/net
+          # 替换15-automount脚本
+          rm -rf openwrt/package/lean/automount/files/15-automount
+          cp -r files/15-automount openwrt/package/lean/automount/files
           # 替换cpuinfo
           rm -rf openwrt/package/lean/autocore/files/arm/sbin/cpuinfo
           cp -r files/rax3000m-lede/cpuinfo openwrt/package/lean/autocore/files/arm/sbin
@@ -93,10 +110,9 @@ jobs:
           sed -i 's/VERSION:=.*/VERSION:=2024.11.1/g' openwrt/feeds/packages/net/cloudflared/Makefile
           sed -i 's/HASH:=.*/HASH:=1bf729c225701f6864b31bb6c251293caa06f9f1a6e671f3326dd20c3c9719ff/' openwrt/feeds/packages/net/cloudflared/Makefile
           sed -i '/init.d/d;/cloudflared.config $(1)/d;' openwrt/feeds/packages/net/cloudflared/Makefile
-          # 修改autosamba共享0777权限
-          sed -i 's/0666/0777/' openwrt/package/lean/autosamba/files/20-smb
           # 修改硬盘休眠配置文件
           sed -i 's#sda#/mnt/sda1#g' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
+          
           # 修改插件顺序
           find openwrt/feeds/luci -path '*/network.lua' -exec sed -i 's/page.order  = 30/page.order  = 42/' {} \;
           find openwrt/feeds/luci -path '*/network.lua' -exec sed -i 's/page.order  = 60/page.order  = 41/' {} \;
@@ -207,5 +223,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: LEDE_RAX3000M_18.06-20241206
+          name: LEDE_RAX3000M_18.06-20241215-ksmbd
           path: openwrt/bin
