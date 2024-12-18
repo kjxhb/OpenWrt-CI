@@ -1,97 +1,52 @@
 #!/bin/sh
 
-. /lib/functions.sh
-. /lib/functions/service.sh
-
-global=0
 config_file="/etc/config/samba4"
-
-wait_for_init() {
-	for i in `seq 5`
-	do
-		[ -e /tmp/procd.done ] || {
-		sleep 1; continue;
-		}
-		return
-	done
-}
-
-smb_handle() {
-	config_get path $1 path
-	if [  "$path" = "$2" ] ;then
-		global=1
-	fi
-}
-
-chk_en() {
-	config_get_bool autoshare $1 autoshare 1
-	[ $autoshare -eq 0 ] && exit
-}
-
-config_load samba4
-config_foreach chk_en samba4
-
-device=`basename $DEVPATH`
+init_file="/etc/init.d/samba4"
 
 case "$ACTION" in
 	add)
-
-	case "$device" in
-		sd*);;
-		md*);;
-		hd*);;
-		mmcblk*);;
-		*) return;;
-	esac
-
-	path="/dev/$device"
-
-	wait_for_init
-
-	cat /proc/mounts | grep -v '/boot\|/opt' | while read j
-	do
-		str=${j%% *}
-		if [ "$str" == $path ];then
-			strr=${j#* }
-			target=${strr%% *}
-			global=0
-			config_foreach smb_handle sambashare $target
-			name=${target#*/mnt/}
-
-			if [ $global -eq 0 ] ;then
+		sleep 2
+		for disk in $(ls /mnt | grep "sd[a-z][1-9]")
+		do
+			if ! grep -q "autoshare '1'" $config_file
+			then
+				exit
+			elif ! grep -q "$disk" $config_file
+			then
 				echo -e "\n\nconfig sambashare" >> $config_file
 				echo -e "\toption auto '1'" >> $config_file
-				echo -e "\toption name '$name'" >> $config_file
-				echo -e "\toption path '$target'" >> $config_file
+				echo -e "\toption name '$disk'" >> $config_file
+				echo -e "\toption path '/mnt/$disk'" >> $config_file
 				echo -e "\toption read_only 'no'" >> $config_file
 				echo -e "\toption force_root '1'" >> $config_file
 				echo -e "\toption guest_ok 'yes'" >> $config_file
 				echo -e "\toption create_mask '0777'" >> $config_file
 				echo -e "\toption dir_mask '0777'" >> $config_file
-				echo -e "\toption device '$device'" >> $config_file
+				echo -e "\toption device '$disk'" >> $config_file
 				echo -e "\toption inherit_owner 'yes'" >> $config_file
-				/etc/init.d/samba4 reload
-				return
+				$init_file reload
 			fi
-		fi
-	done
-	;;
+		done
+		;;
 
 	remove)
 		i=0
 		while true
 		do
-			grep -q "auto '1'" /etc/config/samba4 || break
-		
-			dev=`uci get samba4.@sambashare[$i].device`
-			[ "$dev" = "$device" ] && {
-				mount_dir=`uci get samba4.@sambashare[$i].name`
-				uci delete samba4.@sambashare[$i]
-				uci commit
-				/etc/init.d/samba4 reload
-				return
-			}
+			if ! grep -q "auto '1'" $config_file
+			then
+				exit
+			else
+				disk=$(uci get samba4.@sambashare[$i].device)
+				if [ ! -e "/mnt/$disk" ]
+				then
+					uci delete samba4.@sambashare[$i]
+					uci commit
+					$init_file reload
+					return
+				fi
+			fi
 			let i+=1
 		done
-	;;
+		;;
 esac
