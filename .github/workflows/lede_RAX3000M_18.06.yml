@@ -16,6 +16,7 @@
 # 20241215更新：1、恢复autosamba默认插件为luci-app-ksmbd，替换ksmbd-tools，添加ksmbd-avahi-service；2、替换修改20-smb脚本为ksmbd自动挂载；3、替换15-automount脚本、wsdd2。
 # 20241215更新：1、恢复autosamba默认插件为luci-app-samba。
 # 20241225更新：1、添加luci-app-zerotier。
+# 20241226更新：1、添加luci-app-zerotier，去除tailscale。
 
 name: compile LEDE_RAX3000M_18.06
 
@@ -169,7 +170,7 @@ jobs:
           CONFIG_PACKAGE_git-http=y
           CONFIG_PACKAGE_msd_lite=y
           CONFIG_PACKAGE_ddns-scripts-cloudflare=y
-          CONFIG_PACKAGE_tailscale=y
+          #CONFIG_PACKAGE_tailscale=y
           CONFIG_PACKAGE_luci-theme-argon-lede=y
           CONFIG_PACKAGE_luci-app-accesscontrol=y
           CONFIG_PACKAGE_luci-app-adbyby-plus=y
@@ -225,5 +226,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: LEDE_RAX3000M_18.06-20241215-samba
+          name: LEDE_RAX3000M_18.06-20241226-samba
           path: openwrt/bin
