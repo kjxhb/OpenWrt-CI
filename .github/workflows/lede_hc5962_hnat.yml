@@ -11,6 +11,7 @@
 #20240920更新：1、更换源码仓库为克隆的LEDE仓库。
 #20240921更新：1、更新tailscale版本为1.72.1；2、删除编译代码V=s。
 #20240924更新：1、恢复LEDE仓库；2、常规更新。
+#20250103更新：1、参考ram3000m其他修改；2、更改openclash仓库，更新cloudflared版本。
 
 name: compile LEDE_hc5962_hnat
 
@@ -51,6 +52,8 @@ jobs:
 
       - name: 下载源码
         run: git clone --depth 1 https://github.com/coolsnowwolf/lede openwrt
+      - name: 修改luci18.06
+        run: sed -i '/luci.git/s/;openwrt-23.05$//' openwrt/feeds.conf.default
 #      - name: 更改5.10内核
 #        run: sed -i '/USE_ELF_REL=y/a CONFIG_MT753X_GSW=y' openwrt/target/linux/ramips/mt7621/config-5.10
       - name: 替换hnat驱动，替换ramips
@@ -72,34 +75,48 @@ jobs:
           rm -rf openwrt/feeds/routing/batman-adv
           cp -r files/hc5962-lede/batman-adv openwrt/feeds/routing
           # 添加插件
-          git clone --depth 1 https://github.com/vernesong/OpenClash openwrt/package/OpenClash
+          git clone --depth 1 https://github.com/kjxhb/OpenClash openwrt/package/OpenClash
           cp -r files/luci-app-advancedsetting openwrt/package
           cp -r files/luci-app-cloudflared openwrt/package
           cp -r files/luci-app-fileassistant openwrt/package
           cp -r files/luci-app-msd_lite openwrt/package
           cp -r files/luci-theme-argon-lede openwrt/package
+          # 替换autosamba的20-smb
+          rm -rf openwrt/package/lean/autosamba/files/20-smb
+          cp -r files/20-smb openwrt/package/lean/autosamba/files
+          # 修改autosamba
+          sed -i '/default PACKAGE/s/_KSMBD/_SAMBA3/' openwrt/package/lean/autosamba/Makefile
+          sed -i 's/samba4/samba/g' openwrt/package/lean/autosamba/files/20-smb
+          #sed -i 's/sambashare/share/g' openwrt/package/lean/autosamba/files/20-smb
+          #sed -i '/toption inherit/d' openwrt/package/lean/autosamba/files/20-smb
+          # 替换ksmbd-tools，添加ksmbd-avahi-service
+          rm -rf openwrt/feeds/packages/net/ksmbd-tools
+          cp -r files/ksmbd-tools openwrt/feeds/packages/net
+          sed -i 's/-server/-server +ksmbd-avahi-service/' openwrt/feeds/luci/applications/luci-app-ksmbd/Makefile
+          # 替换wsdd2
+          rm -rf openwrt/feeds/packages/net/wsdd2
+          cp -r files/wsdd2 openwrt/feeds/packages/net
+          # 替换15-automount脚本
+          rm -rf openwrt/package/lean/automount/files/15-automount
+          cp -r files/15-automount openwrt/package/lean/automount/files
           # 替换msd_lite
           rm -rf openwrt/feeds/packages/net/msd_lite
           cp -r files/msd_lite openwrt/feeds/packages/net
           # 替换tailscale
-          #rm -rf openwrt/feeds/packages/net/tailscale
-          #cp -r files/tailscale openwrt/feeds/packages/net
-          sed -i 's/VERSION:=.*/VERSION:=1.72.1/g' openwrt/feeds/packages/net/tailscale/Makefile
-          sed -i 's/HASH:=.*/HASH:=21b529e85144f526b61e0998c8b7885d53f17cba21252e5c7252c4014f5f507b/' openwrt/feeds/packages/net/tailscale/Makefile
+          rm -rf openwrt/feeds/packages/net/tailscale
+          cp -r files/tailscale openwrt/feeds/packages/net
+          sed -i 's/VERSION:=.*/VERSION:=1.76.6/g' openwrt/feeds/packages/net/tailscale/Makefile
+          sed -i 's/HASH:=.*/HASH:=1603c78a6a5e9f83b278d305e1196fbfdeeb841be10ac2ddb7ea433c2701234b/' openwrt/feeds/packages/net/tailscale/Makefile
           # 替换update_cloudflare_com_v4.sh
-          rm -rf openwrt/feeds/packages/net/ddns-scripts/files/update_cloudflare_com_v4.sh
-          cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files
+          rm -rf openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns/update_cloudflare_com_v4.sh
+          cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns
           # 修改cloudflared
-          sed -i 's/VERSION:=.*/VERSION:=2024.9.1/g' openwrt/feeds/packages/net/cloudflared/Makefile
-          sed -i 's/HASH:=.*/HASH:=f96b703ea848bc538322eb957749b0b2395e0cf83213cf310cbde0a3f598eac4/' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i 's/VERSION:=.*/VERSION:=2024.12.1/g' openwrt/feeds/packages/net/cloudflared/Makefile
+          sed -i 's/HASH:=.*/HASH:=74794fbcdd7b71131799100d493cf70a8e126cb109f3d9e2abce55593df6a737/' openwrt/feeds/packages/net/cloudflared/Makefile
           sed -i '/init.d/d;/cloudflared.config $(1)/d;' openwrt/feeds/packages/net/cloudflared/Makefile
-          rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.init
-          rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.config
-          # 替换autosamba
-          rm -rf openwrt/package/lean/autosamba
-          cp -r files/autosamba openwrt/package/lean
           # 修改硬盘休眠配置文件
           sed -i 's#sda#/mnt/sda1#g' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
+          
           # 修改插件顺序
           find openwrt/feeds/luci -path '*/network.lua' -exec sed -i 's/page.order  = 30/page.order  = 42/' {} \;
           find openwrt/feeds/luci -path '*/network.lua' -exec sed -i 's/page.order  = 60/page.order  = 41/' {} \;
@@ -113,7 +130,7 @@ jobs:
           find openwrt/feeds/luci -path '*/terminal.lua' -exec sed -i 's/"TTYD Terminal"), 10/"TTYD Terminal"), 55/' {} \;
           # 修改插件名称
           find openwrt/package/OpenClash -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "OpenClash"/msgstr "科学上网"/' {} \;
-          find openwrt/feeds -path '*/zh-cn/base.po' -exec sed -i '2692s/msgstr "重启"/msgstr "系统重启"/' {} \;
+          find openwrt/feeds -path '*/zh-cn/base.po' -exec sed -i '/msgid "Reboot"/{n;s/msgstr "重启"/msgstr "系统重启"/}' {} \;
           find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's#msgstr "备份/升级"#msgstr "备份升级"#' {} \;
           find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "上网时间控制"/msgstr "时间控制"/' {} \;
           find openwrt/feeds -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/' {} \;
@@ -151,10 +168,10 @@ jobs:
           CONFIG_PACKAGE_autosamba=y
           CONFIG_PACKAGE_automount=y
           CONFIG_PACKAGE_cloudflared=y
-          CONFIG_PACKAGE_git-http=y
+          #CONFIG_PACKAGE_git-http=y
           CONFIG_PACKAGE_msd_lite=y
-          CONFIG_PACKAGE_ddns-scripts_cloudflare.com-v4=y
-          CONFIG_PACKAGE_tailscale=y
+          CONFIG_PACKAGE_ddns-scripts-cloudflare=y
+          #CONFIG_PACKAGE_tailscale=y
           CONFIG_PACKAGE_luci-theme-argon-lede=y
           CONFIG_PACKAGE_luci-app-accesscontrol=y
           CONFIG_PACKAGE_luci-app-adbyby-plus=y
@@ -185,7 +202,7 @@ jobs:
           CONFIG_PACKAGE_luci-app-vsftpd=y
           CONFIG_PACKAGE_luci-app-wol=y
           CONFIG_PACKAGE_luci-app-wrtbwmon=y
-          CONFIG_PACKAGE_luci-app-zerotier=n
+          CONFIG_PACKAGE_luci-app-zerotier=y
           CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-webui=n
           CONFIG_PACKAGE_luci-app-rclone_INCLUDE_rclone-ng=n
           CONFIG_PACKAGE_luci-app-unblockmusic_INCLUDE_UnblockNeteaseMusic_Go=n
@@ -205,5 +222,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: OpenWrt_LEDE_hc5962_hnat-20240924
-          path: openwrt/bin/targets/ramips/mt7621
+          name: OpenWrt_LEDE_hc5962_hnat-20250103
+          path: openwrt/bin
