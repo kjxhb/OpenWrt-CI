@@ -56,7 +56,7 @@ jobs:
       - name: 修改luci18.06
         run: sed -i '/luci.git/s/;openwrt-23.05$//' openwrt/feeds.conf.default
       - name: 更改内核
-        run: sed -i '/PATCHVER:=5.10/PATCHVER:=5.4' openwrt/target/linux/ramips/Makefile
+        run: sed -i '/PATCHVER:=5.10/PATCHVER:=5.4/' openwrt/target/linux/ramips/Makefile
       - name: 替换hnat驱动，替换ramips
         run: |
           rm -rf openwrt/target/linux/ramips/dts/mt7621_hiwifi_hc5962.dts
