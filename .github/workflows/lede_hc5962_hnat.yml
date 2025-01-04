@@ -12,6 +12,7 @@
 #20240921更新：1、更新tailscale版本为1.72.1；2、删除编译代码V=s。
 #20240924更新：1、恢复LEDE仓库；2、常规更新。
 #20250103更新：1、参考ram3000m其他修改；2、更改openclash仓库，更新cloudflared版本。
+#20250104更新：1、更换内核为5.4。
 
 name: compile LEDE_hc5962_hnat
 
@@ -54,8 +55,8 @@ jobs:
         run: git clone --depth 1 https://github.com/coolsnowwolf/lede openwrt
       - name: 修改luci18.06
         run: sed -i '/luci.git/s/;openwrt-23.05$//' openwrt/feeds.conf.default
-#      - name: 更改5.10内核
-#        run: sed -i '/USE_ELF_REL=y/a CONFIG_MT753X_GSW=y' openwrt/target/linux/ramips/mt7621/config-5.10
+      - name: 更改内核
+        run: sed -i 's/PATCHVER:=5.10/PATCHVER:=5.4/' openwrt/target/linux/ramips/Makefile
       - name: 替换hnat驱动，替换ramips
         run: |
           rm -rf openwrt/target/linux/ramips/dts/mt7621_hiwifi_hc5962.dts
@@ -222,5 +223,5 @@ jobs:
       - name : 上传bin文件夹(固件+ipk)到 github actions
         uses: actions/upload-artifact@v4
         with:
-          name: OpenWrt_LEDE_hc5962_hnat-20250103
+          name: OpenWrt_LEDE_hc5962_hnat-20250104
           path: openwrt/bin
