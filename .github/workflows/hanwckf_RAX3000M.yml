@@ -247,7 +247,7 @@ jobs:
           CONFIG_PACKAGE_kmod-lib-crc32c=y
           CONFIG_PACKAGE_kmod-lib-lzo=y
           CONFIG_PACKAGE_kmod-mediatek_hnat=y
-          CONFIG_PACKAGE_kmod-mt_wifi=y
+          #CONFIG_PACKAGE_kmod-mt_wifi=y
           CONFIG_PACKAGE_kmod-nf-flow=y
           CONFIG_PACKAGE_kmod-nls-base=y
           CONFIG_PACKAGE_kmod-nls-cp437=y
@@ -286,7 +286,7 @@ jobs:
           CONFIG_PACKAGE_mii_mgr=y
           CONFIG_PACKAGE_miniupnpd=y
           CONFIG_PACKAGE_mtkhqos_util=y
-          CONFIG_PACKAGE_mtwifi-cfg=y
+          #CONFIG_PACKAGE_mtwifi-cfg=y
           CONFIG_PACKAGE_nano=y
           CONFIG_PACKAGE_openssh-keygen=y
           CONFIG_PACKAGE_openssh-sftp-server=y
@@ -299,7 +299,7 @@ jobs:
           CONFIG_PACKAGE_tc-tiny=y
           CONFIG_PACKAGE_tcpdump=y
           CONFIG_PACKAGE_terminfo=y
-          CONFIG_PACKAGE_wifi-dats=y
+          #CONFIG_PACKAGE_wifi-dats=y
           CONFIG_PACKAGE_wireless-regdb=y
           CONFIG_PACKAGE_wireless-tools=y
           CONFIG_PACKAGE_zram-swap=y
