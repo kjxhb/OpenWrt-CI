@@ -25,12 +25,13 @@ sed -i 's/HASH:=.*/HASH:=f96b703ea848bc538322eb957749b0b2395e0cf83213cf310cbde0a
 sed -i '/init.d/d;/cloudflared.config $(1)/d;' openwrt/feeds/packages/net/cloudflared/Makefile
 rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.init
 rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.config
-# 替换autosamba的20-smb
+# 修改autosamba和automount
 rm -rf openwrt/package/lean/autosamba/files/20-smb
 cp -r files/20-smb openwrt/package/lean/autosamba/files
-# 修改autosamba
 sed -i 's/samba4/samba/g' openwrt/package/lean/autosamba/Makefile
 sed -i 's/samba4/samba/g' openwrt/package/lean/autosamba/files/20-smb
+rm -rf openwrt/package/lean/automount/files/15-automount
+cp -r files/15-automount openwrt/package/lean/automount/files
 # 修改硬盘休眠配置文件
 sed -i 's#sda#/mnt/sda1#g' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
 # 修改插件顺序
