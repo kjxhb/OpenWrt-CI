@@ -45,6 +45,9 @@ find openwrt/feeds/luci -path '*/ddns.lua' -exec sed -i 's/"Dynamic DNS"), 59/"D
 find openwrt/feeds/luci -path '*/easymesh.lua' -exec sed -i 's/"EASY MESH"), 60/"EASY MESH"), 80/' {} \;
 find openwrt/feeds/luci -path '*/hd_idle.lua' -exec sed -i 's/("HDD Idle"), 60/("HDD Idle"), 70/' {} \;
 find openwrt/feeds/luci -path '*/terminal.lua' -exec sed -i 's/"TTYD Terminal"), 10/"TTYD Terminal"), 55/' {} \;
+find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i 's/"ZeroTier"), 99/"ZeroTier"), 115/' {} \;
+find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i 's/"vpn"/"services"/g' {} \;
+find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i '/firstchild/d;' {} \;
 # 修改插件名称
 find openwrt/package/OpenClash -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "OpenClash"/msgstr "科学上网"/' {} \;
 find openwrt/feeds -path '*/zh-cn/base.po' -exec sed -i '2692s/msgstr "重启"/msgstr "系统重启"/' {} \;
