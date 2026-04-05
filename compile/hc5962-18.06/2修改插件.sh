@@ -19,6 +19,8 @@ sed -i 's/HASH:=.*/HASH:=21b529e85144f526b61e0998c8b7885d53f17cba21252e5c7252c40
 # 替换update_cloudflare_com_v4.sh
 rm -rf openwrt/feeds/packages/net/ddns-scripts/files/update_cloudflare_com_v4.sh
 cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files
+#rm -rf openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns/update_cloudflare_com_v4.sh
+#cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns
 # 修改cloudflared
 sed -i 's/VERSION:=.*/VERSION:=2024.9.1/g' openwrt/feeds/packages/net/cloudflared/Makefile
 sed -i 's/HASH:=.*/HASH:=f96b703ea848bc538322eb957749b0b2395e0cf83213cf310cbde0a3f598eac4/' openwrt/feeds/packages/net/cloudflared/Makefile
