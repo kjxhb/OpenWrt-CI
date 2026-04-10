@@ -18,8 +18,8 @@ cp -r files/15-automount openwrt/package/lean/automount/files
 rm -rf openwrt/package/lean/autocore/files/arm/sbin/cpuinfo
 cp -r files/rax3000m-lede/cpuinfo openwrt/package/lean/autocore/files/arm/sbin
 # 替换msd_lite
-#rm -rf openwrt/feeds/packages/net/msd_lite
-#cp -r files/msd_lite openwrt/feeds/packages/net
+rm -rf openwrt/feeds/packages/net/msd_lite
+cp -r files/msd_lite openwrt/feeds/packages/net
 # 替换tailscale
 #rm -rf openwrt/feeds/packages/net/tailscale
 #cp -r files/tailscale openwrt/feeds/packages/net
@@ -48,6 +48,8 @@ find openwrt/feeds/luci -path '*/terminal.lua' -exec sed -i 's/"TTYD Terminal"),
 find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i 's/"ZeroTier"), 99/"ZeroTier"), 115/' {} \;
 find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i 's/"vpn"/"services"/g' {} \;
 find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i '/firstchild/d;' {} \;
+find openwrt/feeds/luci -path '*/eqos.lua' -exec sed -i 's/"EQoS"/_("EQoS"), 80/g' {} \;
+find openwrt/feeds/luci -path '*/eqos.lua' -exec sed -i 's/"network"/"services"/g' {} \;
 # 修改插件名称
 find openwrt/package/OpenClash -path '*/zh-cn/*.po' -exec sed -i 's/msgstr "OpenClash"/msgstr "科学上网"/' {} \;
 find openwrt/feeds -path '*/zh-cn/base.po' -exec sed -i '2692s/msgstr "重启"/msgstr "系统重启"/' {} \;

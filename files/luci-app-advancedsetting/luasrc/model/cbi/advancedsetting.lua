@@ -359,4 +359,179 @@ function conf.write(self, section, value)
 end
 end
 
+--vsftpd
+if nixio.fs.access("/etc/config/vsftpd") then
+s:tab("config15", translate("配置FTP"), translate("本页是配置/etc/config/vsftpd的文档内容。应用保存后自动重启生效"))
+conf = s:taboption("config15", Value, "editconf15", nil, translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template = "cbi/tvalue"
+conf.rows = 20
+conf.wrap = "off"
+
+function conf.cfgvalue(self, section)
+	return fs.readfile("/etc/config/vsftpd") or ""
+end
+
+function conf.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		fs.writefile("/tmp/vsftpd", value)
+		if (luci.sys.call("cmp -s /tmp/vsftpd /etc/config/vsftpd") == 1) then
+			fs.writefile("/etc/config/vsftpd", value)
+			luci.sys.call("/etc/init.d/vsftpd restart >/dev/null")
+		end
+		fs.remove("/tmp/vsftpd")
+	end
+end
+end
+
+--samba
+if nixio.fs.access("/etc/config/samba") then
+s:tab("config16", translate("配置网络共享"), translate("本页是配置/etc/config/samba的文档内容。应用保存后自动重启生效"))
+conf = s:taboption("config16", Value, "editconf16", nil, translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template = "cbi/tvalue"
+conf.rows = 20
+conf.wrap = "off"
+
+function conf.cfgvalue(self, section)
+	return fs.readfile("/etc/config/samba") or ""
+end
+
+function conf.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		fs.writefile("/tmp/samba", value)
+		if (luci.sys.call("cmp -s /tmp/samba /etc/config/samba") == 1) then
+			fs.writefile("/etc/config/samba", value)
+			luci.sys.call("/etc/init.d/samba restart >/dev/null")
+		end
+		fs.remove("/tmp/samba")
+	end
+end
+end
+
+--cloudflared
+if nixio.fs.access("/etc/config/cloudflared") then
+s:tab("config17", translate("配置cloudflared"), translate("本页是配置/etc/config/cloudflared的文档内容。应用保存后自动重启生效"))
+conf = s:taboption("config17", Value, "editconf17", nil, translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template = "cbi/tvalue"
+conf.rows = 20
+conf.wrap = "off"
+
+function conf.cfgvalue(self, section)
+	return fs.readfile("/etc/config/cloudflared") or ""
+end
+
+function conf.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		fs.writefile("/tmp/cloudflared", value)
+		if (luci.sys.call("cmp -s /tmp/cloudflared /etc/config/cloudflared") == 1) then
+			fs.writefile("/etc/config/cloudflared", value)
+			luci.sys.call("/etc/init.d/cloudflared restart >/dev/null")
+		end
+		fs.remove("/tmp/cloudflared")
+	end
+end
+end
+
+--zerotier
+if nixio.fs.access("/etc/config/zerotier") then
+s:tab("config18", translate("配置zerotier"), translate("本页是配置/etc/config/zerotier的文档内容。应用保存后自动重启生效"))
+conf = s:taboption("config18", Value, "editconf18", nil, translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template = "cbi/tvalue"
+conf.rows = 20
+conf.wrap = "off"
+
+function conf.cfgvalue(self, section)
+	return fs.readfile("/etc/config/zerotier") or ""
+end
+
+function conf.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		fs.writefile("/tmp/zerotier", value)
+		if (luci.sys.call("cmp -s /tmp/zerotier /etc/config/zerotier") == 1) then
+			fs.writefile("/etc/config/zerotier", value)
+			luci.sys.call("/etc/init.d/zerotier restart >/dev/null")
+		end
+		fs.remove("/tmp/zerotier")
+	end
+end
+end
+
+--tailscale
+if nixio.fs.access("/etc/config/tailscale") then
+s:tab("config19", translate("配置tailscale"), translate("本页是配置/etc/config/tailscale的文档内容。应用保存后自动重启生效"))
+conf = s:taboption("config19", Value, "editconf19", nil, translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template = "cbi/tvalue"
+conf.rows = 20
+conf.wrap = "off"
+
+function conf.cfgvalue(self, section)
+	return fs.readfile("/etc/config/tailscale") or ""
+end
+
+function conf.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		fs.writefile("/tmp/tailscale", value)
+		if (luci.sys.call("cmp -s /tmp/tailscale /etc/config/tailscale") == 1) then
+			fs.writefile("/etc/config/tailscale", value)
+			luci.sys.call("/etc/init.d/tailscale restart >/dev/null")
+		end
+		fs.remove("/tmp/tailscale")
+	end
+end
+end
+
+--socat
+if nixio.fs.access("/etc/config/socat") then
+s:tab("config20", translate("配置端口转发"), translate("本页是配置/etc/config/socat的文档内容。应用保存后自动重启生效"))
+conf = s:taboption("config20", Value, "editconf20", nil, translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template = "cbi/tvalue"
+conf.rows = 20
+conf.wrap = "off"
+
+function conf.cfgvalue(self, section)
+	return fs.readfile("/etc/config/socat") or ""
+end
+
+function conf.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		fs.writefile("/tmp/socat", value)
+		if (luci.sys.call("cmp -s /tmp/socat /etc/config/socat") == 1) then
+			fs.writefile("/etc/config/socat", value)
+			luci.sys.call("/etc/init.d/socat restart >/dev/null")
+		end
+		fs.remove("/tmp/socat")
+	end
+end
+end
+
+--msd_lite
+if nixio.fs.access("/etc/config/msd_lite") then
+s:tab("config21", translate("配置组播转换"), translate("本页是配置/etc/config/msd_lite的文档内容。应用保存后自动重启生效"))
+conf = s:taboption("config21", Value, "editconf21", nil, translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template = "cbi/tvalue"
+conf.rows = 20
+conf.wrap = "off"
+
+function conf.cfgvalue(self, section)
+	return fs.readfile("/etc/config/msd_lite") or ""
+end
+
+function conf.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		fs.writefile("/tmp/msd_lite", value)
+		if (luci.sys.call("cmp -s /tmp/msd_lite /etc/config/msd_lite") == 1) then
+			fs.writefile("/etc/config/msd_lite", value)
+			luci.sys.call("/etc/init.d/msd_lite restart >/dev/null")
+		end
+		fs.remove("/tmp/msd_lite")
+	end
+end
+end
+
 return m

@@ -8,8 +8,8 @@
 rm -rf openwrt/target/linux/ramips/dts/mt7621_hiwifi_hc5962.dts
 cp -r files/hc5962-lede/LEDE-DSA-02network-dst/mt7621_hiwifi_hc5962.dts openwrt/target/linux/ramips/dts
 # 修复batman-adv编译错误
-rm -rf openwrt/feeds/routing/batman-adv
-cp -r files/hc5962-lede/batman-adv openwrt/feeds/routing
+#rm -rf openwrt/feeds/routing/batman-adv
+#cp -r files/hc5962-lede/batman-adv openwrt/feeds/routing
 # 添加插件
 git clone --depth 1 https://github.com/vernesong/OpenClash openwrt/package/OpenClash
 cp -r files/luci-app-advancedsetting openwrt/package
@@ -23,22 +23,24 @@ cp -r files/msd_lite openwrt/feeds/packages/net
 # 替换tailscale
 #rm -rf openwrt/feeds/packages/net/tailscale
 #cp -r files/tailscale openwrt/feeds/packages/net
-sed -i 's/VERSION:=.*/VERSION:=1.72.1/g' openwrt/feeds/packages/net/tailscale/Makefile
-sed -i 's/HASH:=.*/HASH:=21b529e85144f526b61e0998c8b7885d53f17cba21252e5c7252c4014f5f507b/' openwrt/feeds/packages/net/tailscale/Makefile
+#sed -i 's/VERSION:=.*/VERSION:=1.72.1/g' openwrt/feeds/packages/net/tailscale/Makefile
+#sed -i 's/HASH:=.*/HASH:=21b529e85144f526b61e0998c8b7885d53f17cba21252e5c7252c4014f5f507b/' openwrt/feeds/packages/net/tailscale/Makefile
 # 替换update_cloudflare_com_v4.sh
-rm -rf openwrt/feeds/packages/net/ddns-scripts/files/update_cloudflare_com_v4.sh
-cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files
+rm -rf openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns/update_cloudflare_com_v4.sh
+cp files/update_cloudflare_com_v4.sh openwrt/feeds/packages/net/ddns-scripts/files/usr/lib/ddns
 # 修改cloudflared
-sed -i 's/VERSION:=.*/VERSION:=2024.9.1/g' openwrt/feeds/packages/net/cloudflared/Makefile
-sed -i 's/HASH:=.*/HASH:=f96b703ea848bc538322eb957749b0b2395e0cf83213cf310cbde0a3f598eac4/' openwrt/feeds/packages/net/cloudflared/Makefile
+#sed -i 's/VERSION:=.*/VERSION:=2024.9.1/g' openwrt/feeds/packages/net/cloudflared/Makefile
+#sed -i 's/HASH:=.*/HASH:=f96b703ea848bc538322eb957749b0b2395e0cf83213cf310cbde0a3f598eac4/' openwrt/feeds/packages/net/cloudflared/Makefile
 sed -i '/init.d/d;/cloudflared.config $(1)/d;' openwrt/feeds/packages/net/cloudflared/Makefile
 rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.init
 rm -rf openwrt/feeds/packages/net/cloudflared/files/cloudflared.config
-# 修改autosamba和automount
+# 替换autosamba的20-smb
 rm -rf openwrt/package/lean/autosamba/files/20-smb
 cp -r files/20-smb openwrt/package/lean/autosamba/files
-sed -i 's/samba4/samba/g' openwrt/package/lean/autosamba/Makefile
+# 修改autosamba
+sed -i '/default PACKAGE/s/_KSMBD/_SAMBA3/' openwrt/package/lean/autosamba/Makefile
 sed -i 's/samba4/samba/g' openwrt/package/lean/autosamba/files/20-smb
+# 替换15-automount脚本
 rm -rf openwrt/package/lean/automount/files/15-automount
 cp -r files/15-automount openwrt/package/lean/automount/files
 # 修改硬盘休眠配置文件
