@@ -45,6 +45,9 @@ rm -rf openwrt/package/lean/automount/files/15-automount
 cp -r files/15-automount openwrt/package/lean/automount/files
 # 修改硬盘休眠配置文件
 sed -i 's#sda#/mnt/sda1#g' openwrt/feeds/packages/utils/hd-idle/files/hd-idle.config
+# 替换luci-app-zerotier
+rm -rf openwrt/feeds/luci/applications/luci-app-zerotier
+cp -r files/luci-app-zerotier openwrt/feeds/luci/applications
 # 修改插件顺序
 find openwrt/feeds/luci -path '*/network.lua' -exec sed -i 's/page.order  = 30/page.order  = 42/' {} \;
 find openwrt/feeds/luci -path '*/network.lua' -exec sed -i 's/page.order  = 60/page.order  = 41/' {} \;
@@ -56,9 +59,10 @@ find openwrt/feeds/luci -path '*/ddns.lua' -exec sed -i 's/"Dynamic DNS"), 59/"D
 find openwrt/feeds/luci -path '*/easymesh.lua' -exec sed -i 's/"EASY MESH"), 60/"EASY MESH"), 80/' {} \;
 find openwrt/feeds/luci -path '*/hd_idle.lua' -exec sed -i 's/("HDD Idle"), 60/("HDD Idle"), 70/' {} \;
 find openwrt/feeds/luci -path '*/terminal.lua' -exec sed -i 's/"TTYD Terminal"), 10/"TTYD Terminal"), 55/' {} \;
-find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i 's/"ZeroTier"), 99/"ZeroTier"), 115/' {} \;
-find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i 's/"vpn"/"services"/g' {} \;
-find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i '/firstchild/d;' {} \;
+#find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i 's/"ZeroTier"), 99/"ZeroTier"), 115/' {} \;
+#find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i 's/"vpn"/"services"/g' {} \;
+#find openwrt/feeds/luci -path '*/zerotier_status.htm' -exec sed -i 's/vpn/services/g' {} \;
+#find openwrt/feeds/luci -path '*/zerotier.lua' -exec sed -i '/firstchild/d;' {} \;
 find openwrt/feeds/luci -path '*/eqos.lua' -exec sed -i 's/"EQoS"/_("EQoS"), 80/g' {} \;
 find openwrt/feeds/luci -path '*/eqos.lua' -exec sed -i 's/"network"/"services"/g' {} \;
 # 修改插件名称
