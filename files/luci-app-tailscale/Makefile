@@ -35,20 +35,18 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DATA) ./luci/view/tailscale_status.htm $(1)/usr/lib/lua/luci/view/tailscale_status.htm
 	$(INSTALL_DATA) ./luci/view/tailscale_log.htm $(1)/usr/lib/lua/luci/view/tailscale_log.htm
 
-	# install runtime files from root/
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_DIR) $(1)/usr/sbin
+	# install runtime files from root/ (avoid installing /etc/init.d/tailscale and /etc/config/tailscale to prevent conflicts
+	# with the separate openwrt/package/tailscale package)
+	$(INSTALL_DIR) $(1)/usr/libexec
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
 	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d
-	$(INSTALL_DIR) $(1)/etc/config
 
-	$(INSTALL_BIN) ./root/etc/init.d/tailscale $(1)/etc/init.d/tailscale
-	$(INSTALL_BIN) ./root/usr/sbin/tailscale_helper $(1)/usr/sbin/tailscale_helper
+	# install a namespaced helper under /usr/libexec to avoid colliding with upstream tailscale init scripts
+	$(INSTALL_BIN) ./root/usr/libexec/luci-tailscale-helper $(1)/usr/libexec/luci-tailscale-helper
 	$(INSTALL_DATA) ./root/etc/hotplug.d/iface/40-tailscale $(1)/etc/hotplug.d/iface/40-tailscale
 	$(INSTALL_DATA) ./root/etc/uci-defaults/40_luci-tailscale $(1)/etc/uci-defaults/40_luci-tailscale
 	$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/luci-app-tailscale.json $(1)/usr/share/rpcd/acl.d/luci-app-tailscale.json
 	$(INSTALL_DATA) ./root/usr/share/luci/menu.d/luci-app-tailscale.json $(1)/usr/share/luci/menu.d/luci-app-tailscale.json
-	$(INSTALL_DATA) ./root/etc/config/tailscale $(1)/etc/config/tailscale
 endef
