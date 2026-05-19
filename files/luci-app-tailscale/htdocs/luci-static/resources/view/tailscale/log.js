@@ -10,7 +10,10 @@ return view.extend({
 			L.resolveDefault(fs.stat('/sbin/logread'), null),
 			L.resolveDefault(fs.stat('/usr/sbin/logread'), null)
 		]);
-		const logger = stat[0] ? stat[0].path : stat[1] ? stat[1].path : null;
+		const logger = stat[0] ? '/sbin/logread' : stat[1] ? '/usr/sbin/logread' : null;
+		if (!logger) {
+			throw new Error('logread not found');
+		}
 
 		const logdata = await fs.exec_direct(logger, ['-e', 'tailscale']);
 		const statusMappings = {
@@ -28,10 +31,10 @@ return view.extend({
 				const message = logParts.slice(startIndex).join(' ');
 				return `${formattedTime} [ ${newStatus} ] - ${message}`;
 			} else {
-				return 'Log is empty.';
+				return null;
 			}
 		}).filter(Boolean);
-		return { value: loglines.join('\n'), rows: loglines.length + 1 };
+		return { value: loglines.join('\n') || 'No log entries', rows: Math.max(1, loglines.length) };
 	},
 
 	async pollLog() {
@@ -41,8 +44,10 @@ return view.extend({
 				const log = await this.retrieveLog();
 				element.value = log.value;
 				element.rows = log.rows;
+				// keep textarea scrolled to bottom when updating
+				element.scrollTop = element.scrollHeight;
 			} catch (err) {
-				ui.addNotification(null, E('p', {}, _('Unable to load log data: ' + err.message)));
+				ui.addNotification(null, E('p', {}, _('Unable to load log data: ') + (err && err.message ? err.message : String(err))));
 			}
 		}
 	},
@@ -56,19 +61,21 @@ return view.extend({
 		const scrollDownButton = E('button', { 
 				id: 'scrollDownButton',
 				class: 'cbi-button cbi-button-neutral'
-			}, _('Scroll to tail', 'scroll to bottom (the tail) of the log file')
+			}, _('Scroll to tail')
 		);
 		scrollDownButton.addEventListener('click', function() {
-			scrollUpButton.scrollIntoView();
+			const el = document.getElementById('syslog');
+			if (el) el.scrollTop = el.scrollHeight;
 		});
 
 		const scrollUpButton = E('button', { 
 				id : 'scrollUpButton',
 				class: 'cbi-button cbi-button-neutral'
-			}, _('Scroll to head', 'scroll to top (the head) of the log file')
+			}, _('Scroll to head')
 		);
 		scrollUpButton.addEventListener('click', function() {
-			scrollDownButton.scrollIntoView();
+			const el = document.getElementById('syslog');
+			if (el) el.scrollTop = 0;
 		});
 
 		return E([], [

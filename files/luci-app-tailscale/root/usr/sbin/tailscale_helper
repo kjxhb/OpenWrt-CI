@@ -1,66 +1,58 @@
 #!/bin/sh
 
-# Copyright (C) 2025 asvow
 # SPDX-License-Identifier: GPL-3.0-only
+# luci-tailscale helper (portable / POSIX compatible)
+# This helper is intentionally minimal: it invokes `tailscale up` with provided arguments,
+# waits for an IPv4 address to appear, and exits. It avoids modifying /etc/config or init scripts
+# so it does not conflict with the upstream openwrt/package/tailscale package.
 
-# Error handling function
-revert_exit() {
-	logger -p daemon.err -t tailscale_helper "$(date '+%Y/%m/%d %H:%M:%S') $1"
-	uci revert dhcp && uci revert network && uci revert firewall
-	/etc/init.d/tailscale stop
-	exit 1
+set -eu
+
+REVERT_EXIT() {
+    logger -p daemon.err -t luci-tailscale "$1"
+    # do not attempt to revert system config here to avoid clobbering upstream package state
+    exit 1
 }
 
-# Execute tailscale up command
-/usr/sbin/tailscale up --reset "$@" || revert_exit "tailscale up failed."
+TAILSCALE_BIN="/usr/sbin/tailscale"
+LOCKDIR="/var/lock/luci-tailscale.lock"
 
-# Use flock to acquire an exclusive lock
-LOCK_FILE="/var/lock/tailscale.lock"
-exec 9> "$LOCK_FILE"
-flock -xn 9 || { revert_exit "Failed to acquire lock on $LOCK_FILE"; }
-trap 'rm -f "$LOCK_FILE"; exit' INT TERM EXIT
-
-# Wait for Tailscale IPv4 address
-count=0
-while [ -z "$(ifconfig | grep 'tailscale' | awk '{print $1}')" ] || [ -z "$(tailscale ip -4)" ]; do
-	sleep 2
-	count=$((count + 1))
-	[ "${count}" -ge 5 ] && revert_exit "Failed to get Tailscale IPv4 address after 5 attempts."
-done
-
-# Configure Tailscale MagicDNS
-if [ "$ACCEPT_DNS" = "1" ]; then
-	MagicDNSSuffix=$(tailscale status --json | awk -F'"' '/"MagicDNSSuffix"/ {last=$(NF-1)} END {print last}')
-	target_address="/$MagicDNSSuffix/100.100.100.100"
-	index=$(uci show dhcp | grep 'dhcp.@dnsmasq\[[0-9]\+\]=dnsmasq' | grep -o '[0-9]\+')
-	for i in $index; do
-		if ! uci get dhcp.@dnsmasq[$i].address 2>/dev/null | grep -qxF "$target_address"; then
-			uci add_list "dhcp.@dnsmasq[$i].address=$target_address" || revert_exit "Failed to add DNS address."
-		fi
-	done
+if [ ! -x "$TAILSCALE_BIN" ]; then
+    REVERT_EXIT "tailscale binary not found at $TAILSCALE_BIN"
 fi
 
-# Configure network interface for Tailscale
-ts0=$(ifconfig | grep 'tailscale' | awk '{print $1}')
-if [ -z "$(uci -q get network.tailscale)" ]; then
-	uci set network.tailscale='interface'
-	if [ "$ts0" = *$'\n'* ]; then
-		[ -n "$(uci batch <<-EOF 2>&1
-			set network.ts_lan='device'
-			set network.ts_lan.type='bridge'
-			set network.ts_lan.name='ts-lan'
-			set network.tailscale.proto='none'
-			set network.tailscale.device='ts-lan'
-		EOF
-		)" ] && revert_exit "Failed to configure network interface for Tailscale."
-		for port in "${ts0}"; do
-			uci add_list network.ts_lan.ports=$port || revert_exit "Failed to add port $port."
-		done
-	else
-		[ -n "$(uci batch <<-EOF 2>&1
-			set network.tailscale.proto='static'
-			set network.tailscale.ipaddr=$(tailscale ip -4)
-			add_list network.tailscale.ip6addr=$(tailscale ip -6)
-			set network.tailscale.netmask='255.0.0.0'
-			set network.tailscale.device=$ts0
-		EOF
+# Run tailscale up with passed args
+if ! "$TAILSCALE_BIN" up --reset "$@"; then
+    REVERT_EXIT "tailscale up failed"
+fi
+
+# Acquire a simple lock using mkdir (portable)
+LOCK_CREATED=0
+if mkdir "$LOCKDIR" 2>/dev/null; then
+    LOCK_CREATED=1
+    trap 'rmdir "$LOCKDIR" >/dev/null 2>&1; exit' INT TERM EXIT
+fi
+
+# wait for IPv4 address (timeout ~30s)
+COUNT=0
+FOUND=0
+while [ "$COUNT" -lt 15 ]; do
+    if $TAILSCALE_BIN ip -4 >/dev/null 2>&1; then
+        FOUND=1
+        break
+    fi
+    sleep 2
+    COUNT=$((COUNT + 1))
+done
+
+if [ "$FOUND" -ne 1 ]; then
+    [ "$LOCK_CREATED" -eq 1 ] && rmdir "$LOCKDIR" >/dev/null 2>&1 || true
+    REVERT_EXIT "timed out waiting for Tailscale IPv4 address"
+fi
+
+# cleanup lock if we created it
+if [ "$LOCK_CREATED" -eq 1 ]; then
+    rmdir "$LOCKDIR" >/dev/null 2>&1 || true
+fi
+
+exit 0
