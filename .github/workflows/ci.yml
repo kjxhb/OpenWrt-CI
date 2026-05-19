@@ -1,0 +1,58 @@
+name: CI - luci-app-tailscale
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ tailscale-18.06 ]
+
+jobs:
+  lint-and-sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python (for optional tools)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck luacheck grep
+        # If luacheck is not available on the runner's apt, the job may fail — it's optional.
+
+      - name: Run shellcheck on shell scripts
+        run: |
+          echo "Running shellcheck on helper/init/hotplug scripts"
+          find files/luci-app-tailscale -type f \( -name "*.sh" -o -name "*init.d*" \) -print0 | xargs -0 shellcheck || true
+
+      - name: Run luacheck on Lua files (if available)
+        run: |
+          echo "Running luacheck on Lua files"
+          if command -v luacheck >/dev/null 2>&1; then
+            find files/luci-app-tailscale/luci -type f -name "*.lua" -print0 | xargs -0 luacheck || true
+          else
+            echo "luacheck not installed — skipping Lua lint"
+          fi
+
+      - name: Makefile sanity checks
+        run: |
+          echo "Check Makefile does not install /etc/init.d or /etc/config to avoid conflicts"
+          if grep -E "/etc/init.d|/etc/config" -n files/luci-app-tailscale/Makefile; then
+            echo "ERROR: Makefile mentions /etc/init.d or /etc/config — verify intentional"
+            exit 1
+          else
+            echo "Makefile sanity OK"
+          fi
+
+      - name: Verify helper shebang and portability
+        run: |
+          echo "Verify helper has a POSIX shebang"
+          head -n1 files/luci-app-tailscale/root/usr/libexec/luci-tailscale-helper | grep -E "^#!.*sh" || (echo "helper shebang missing or not sh" && exit 1)
+
+      - name: List package files for manual spot check
+        run: |
+          echo "Files in package directory:" && ls -R files/luci-app-tailscale | sed -n '1,200p'
