@@ -1,0 +1,17 @@
+<%+header%>
+<h2>Tailscale Logs</h2>
+<textarea style="width:100%;height:420px;" readonly>
+<%=
+    local util = require "luci.util"
+    local out = util.exec("/sbin/logread -e tailscale 2>/dev/null")
+    if not out or out == "" then
+        out = "No log entries"
+    end
+    luci.util.htmlescape(out)
+%>
+</textarea>
+<p>
+  <a href="/admin/services/tailscale">Back to Settings</a> |
+  <a href="/admin/services/tailscale/status">View Status</a>
+</p>
+<%+footer%>
