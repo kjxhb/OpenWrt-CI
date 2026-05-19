@@ -1,22 +1,31 @@
 #!/bin/sh
 
+# Copyright (C) 2025 asvow
 # SPDX-License-Identifier: GPL-3.0-only
-# luci-tailscale helper (portable / POSIX compatible)
-# This helper is intentionally minimal: it invokes `tailscale up` with provided arguments,
-# waits for an IPv4 address to appear, and exits. It avoids modifying /etc/config or init scripts
-# so it does not conflict with the upstream openwrt/package/tailscale package.
+
+# Minimal, safer /usr/sbin/tailscale_helper that delegates to
+# /usr/libexec/luci-tailscale-helper when available and otherwise
+# implements a portable fallback. The original script had non-portable
+# constructs and was incomplete; this version keeps behavior predictable.
 
 set -eu
 
 REVERT_EXIT() {
-    logger -p daemon.err -t luci-tailscale "$1"
-    # do not attempt to revert system config here to avoid clobbering upstream package state
+    logger -p daemon.err -t tailscale_helper "$1"
+    uci -q revert dhcp || true
+    uci -q revert network || true
+    uci -q revert firewall || true
+    [ -x /etc/init.d/tailscale ] && /etc/init.d/tailscale stop || true
     exit 1
 }
 
-TAILSCALE_BIN="/usr/sbin/tailscale"
-LOCKDIR="/var/lock/luci-tailscale.lock"
+# Prefer the packaged luci helper if present
+HELPER="/usr/libexec/luci-tailscale-helper"
+if [ -x "$HELPER" ]; then
+    exec "$HELPER" "$@"
+fi
 
+TAILSCALE_BIN="/usr/sbin/tailscale"
 if [ ! -x "$TAILSCALE_BIN" ]; then
     REVERT_EXIT "tailscale binary not found at $TAILSCALE_BIN"
 fi
@@ -27,6 +36,7 @@ if ! "$TAILSCALE_BIN" up --reset "$@"; then
 fi
 
 # Acquire a simple lock using mkdir (portable)
+LOCKDIR="/var/lock/tailscale.lock"
 LOCK_CREATED=0
 if mkdir "$LOCKDIR" 2>/dev/null; then
     LOCK_CREATED=1
@@ -37,7 +47,7 @@ fi
 COUNT=0
 FOUND=0
 while [ "$COUNT" -lt 15 ]; do
-    if $TAILSCALE_BIN ip -4 >/dev/null 2>&1; then
+    if "$TAILSCALE_BIN" ip -4 >/dev/null 2>&1; then
         FOUND=1
         break
     fi
@@ -51,8 +61,6 @@ if [ "$FOUND" -ne 1 ]; then
 fi
 
 # cleanup lock if we created it
-if [ "$LOCK_CREATED" -eq 1 ]; then
-    rmdir "$LOCKDIR" >/dev/null 2>&1 || true
-fi
+[ "$LOCK_CREATED" -eq 1 ] && rmdir "$LOCKDIR" >/dev/null 2>&1 || true
 
 exit 0
