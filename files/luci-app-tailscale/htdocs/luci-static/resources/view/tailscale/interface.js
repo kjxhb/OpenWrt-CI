@@ -11,11 +11,22 @@
 'require ui';
 'require view';
 
+function humanBytes(bytes) {
+	bytes = Number(bytes) || 0;
+	const units = ['B','KB','MB','GB','TB'];
+	let i = 0;
+	while (bytes >= 1024 && i < units.length - 1) {
+		bytes = bytes / 1024;
+		i++;
+	}
+	return (Math.round(bytes * 10) / 10) + units[i];
+}
+
 return view.extend({
 	async load() {
 		const res = await fs.exec('/sbin/ip', ['-s', '-j', 'ad']);
 		if (res.code !== 0 || !res.stdout || res.stdout.trim() === '') {
-			ui.addNotification(null, E('p', {}, _('Unable to get interface info: %s.').format(res.message)));
+			ui.addNotification(null, E('p', {}, _('Unable to get interface info: ') + (res.message || '')));
 			return [];
 		}
 
@@ -38,13 +49,13 @@ return view.extend({
 				});
 
 				parsedInfo.mtu = iface.mtu;
-				parsedInfo.rxBytes = '%1024mB'.format(iface.stats64.rx.bytes);
-				parsedInfo.txBytes = '%1024mB'.format(iface.stats64.tx.bytes);
+				parsedInfo.rxBytes = humanBytes((iface.stats64 && iface.stats64.rx && iface.stats64.rx.bytes) || 0);
+				parsedInfo.txBytes = humanBytes((iface.stats64 && iface.stats64.tx && iface.stats64.tx.bytes) || 0);
 
 				return parsedInfo;
 			});
 		} catch (e) {
-			ui.addNotification(null, E('p', {}, _('Error parsing interface info: %s.').format(e.message)));
+			ui.addNotification(null, E('p', {}, _('Error parsing interface info: ') + (e && e.message ? e.message : String(e))));
 			return [];
 		}
 	},
