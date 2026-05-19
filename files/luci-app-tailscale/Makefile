@@ -30,6 +30,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
+	$(INSTALL_BIN) ./root/usr/libexec/luci-tailscale-start-wrapper $(1)/usr/libexec/luci-tailscale-start-wrapper
 	$(INSTALL_DATA) ./luci/controller/tailscale.lua $(1)/usr/lib/lua/luci/controller/tailscale.lua
 	$(INSTALL_DATA) ./luci/model/cbi/tailscale.lua $(1)/usr/lib/lua/luci/model/cbi/tailscale.lua
 	$(INSTALL_DATA) ./luci/view/tailscale_status.htm $(1)/usr/lib/lua/luci/view/tailscale_status.htm
