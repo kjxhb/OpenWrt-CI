@@ -19,21 +19,36 @@ const callServiceList = rpc.declare({
 	expect: { '': {} }
 });
 
+function ipToInt(ip) {
+	return ip.split('.').map(Number).reduce((acc, octet) => (acc << 8) + (octet & 0xff), 0) >>> 0;
+}
+
+function intToIp(int) {
+	return [(int >>> 24) & 0xff, (int >>> 16) & 0xff, (int >>> 8) & 0xff, int & 0xff].join('.');
+}
+
 async function getInterfaceSubnets(interfaces = ['lan', 'wan']) {
-	const networks = await network.getNetworks();
-	return [...new Set(
-		networks
+	try {
+		const networks = await network.getNetworks();
+		const subnets = networks
 			.filter(ifc => interfaces.includes(ifc.getName()))
 			.flatMap(ifc => ifc.getIPAddrs())
-			.filter(addr => addr.includes('/'))
+			.filter(addr => addr && addr.includes('/'))
 			.map(addr => {
-				const [ip, cidr] = addr.split('/');
-				const ipParts = ip.split('.').map(Number);
-				const mask = ~((1 << (32 - parseInt(cidr))) - 1);
-				const subnetParts = ipParts.map((part, i) => (part & (mask >> (24 - i * 8))) & 255);
-				return `${subnetParts.join('.')}/${cidr}`;
+				const [ip, cidrStr] = addr.split('/');
+				const cidr = parseInt(cidrStr, 10);
+				if (isNaN(cidr) || cidr < 0 || cidr > 32) return null;
+				const ipInt = ipToInt(ip);
+				const mask = cidr === 0 ? 0 : (0xFFFFFFFF << (32 - cidr)) >>> 0;
+				const netInt = ipInt & mask;
+				return `${intToIp(netInt)}/${cidr}`;
 			})
-	)];
+			.filter(Boolean);
+
+		return [...new Set(subnets)];
+	} catch (e) {
+		return [];
+	}
 }
 
 async function getStatus() {
@@ -45,26 +60,59 @@ async function getStatus() {
 		onlineExitNodes: [],
 		subnetRoutes: []
 	};
-	const res = await callServiceList('tailscale');
+
+	let res;
 	try {
-		status.isRunning = res['tailscale']['instances']['instance1']['running'];
+		res = await callServiceList('tailscale');
+		if (res && res.tailscale && res.tailscale.instances && res.tailscale.instances.instance1) {
+			status.isRunning = !!res.tailscale.instances.instance1.running;
+		}
+	} catch (e) {
+		// ignore and return defaults
+		return status;
+	}
+
+	let tailscaleRes;
+	try {
+		tailscaleRes = await fs.exec('/usr/sbin/tailscale', ['status', '--json']);
+		if (!tailscaleRes || tailscaleRes.code !== 0 || !tailscaleRes.stdout) {
+			return status;
+		}
 	} catch (e) {
 		return status;
 	}
-	const tailscaleRes = await fs.exec("/usr/sbin/tailscale", ["status", "--json"]);
-	const tailscaleStatus = JSON.parse(tailscaleRes.stdout.replace(/("\w+"):\s*(\d+)/g, '$1:"$2"'));
-	if (!tailscaleStatus.AuthURL && tailscaleStatus.BackendState === "NeedsLogin") {
-		fs.exec("/usr/sbin/tailscale", ["login"]);
+
+	let tailscaleStatus;
+	try {
+		// some tailscale versions may emit bare numbers; attempt to parse safely
+		tailscaleStatus = JSON.parse(tailscaleRes.stdout.replace(/("\w+"\s*):\s*(\d+)/g, '$1:"$2"'));
+	} catch (e) {
+		return status;
 	}
-	status.backendState = tailscaleStatus.BackendState;
-	status.authURL = tailscaleStatus.AuthURL;
-	status.displayName = (status.backendState === "Running") ? tailscaleStatus.User[tailscaleStatus.Self.UserID].DisplayName : undefined;
-	if (tailscaleStatus.Peer) {
-		status.onlineExitNodes = Object.values(tailscaleStatus.Peer)
-			.flatMap(peer => (peer.ExitNodeOption && peer.Online) ? [peer.HostName] : []);
-		status.subnetRoutes = Object.values(tailscaleStatus.Peer)
-			.flatMap(peer => peer.PrimaryRoutes || []);
+
+	status.backendState = tailscaleStatus && tailscaleStatus.BackendState;
+	status.authURL = tailscaleStatus && tailscaleStatus.AuthURL;
+
+	try {
+		if (status.backendState === 'Running' && tailscaleStatus.Self && tailscaleStatus.Self.UserID && tailscaleStatus.User) {
+			const user = tailscaleStatus.User[tailscaleStatus.Self.UserID];
+			status.displayName = user && user.DisplayName;
+		}
+	} catch (e) {
+		// ignore
 	}
+
+	if (tailscaleStatus && tailscaleStatus.Peer) {
+		try {
+			status.onlineExitNodes = Object.values(tailscaleStatus.Peer)
+				.flatMap(peer => (peer && peer.ExitNodeOption && peer.Online) ? [peer.HostName] : []);
+			status.subnetRoutes = Object.values(tailscaleStatus.Peer)
+				.flatMap(peer => (peer && peer.PrimaryRoutes) ? peer.PrimaryRoutes : []);
+		} catch (e) {
+			// ignore
+		}
+	}
+
 	return status;
 }
 
@@ -81,15 +129,22 @@ function renderStatus(isRunning) {
 }
 
 function renderLogin(loginStatus, authURL, displayName) {
-	const spanTemp = '<span style="color:%s">%s</span>';
-	let renderHTML;
-	if (loginStatus === "NeedsLogin") {
-		renderHTML = String.format('<a href="%s" target="_blank">%s</a>', authURL, _('Need to log in'));
-	} else if (loginStatus === "Running") {
-		renderHTML = String.format('<a href="%s" target="_blank">%s</a>', 'https://login.tailscale.com/admin/machines', displayName);
+	let renderHTML = '';
+	if (loginStatus === 'NeedsLogin') {
+		if (authURL) {
+			renderHTML = String.format('<a href="%s" target="_blank">%s</a>', authURL, _('Need to log in'));
+		} else {
+			renderHTML = _('Need to log in');
+		}
+	} else if (loginStatus === 'Running') {
+		if (displayName) {
+			renderHTML = String.format('<a href="%s" target="_blank">%s</a>', 'https://login.tailscale.com/admin/machines', displayName);
+		} else {
+			renderHTML = String.format('<a href="%s" target="_blank">%s</a>', 'https://login.tailscale.com/admin/machines', _('Open admin'));
+		}
 		renderHTML += String.format('<br><a style="color:green" id="logout_button">%s</a>', _('Log out and Unbind'));
 	} else {
-		renderHTML = String.format(spanTemp, 'orange', _('NOT RUNNING'));
+		renderHTML = String.format('<span style="color:orange">%s</span>', _('NOT RUNNING'));
 	}
 
 	return renderHTML;
@@ -106,10 +161,10 @@ return view.extend({
 
 	render(data) {
 		let m, s, o;
-		const statusData = data[1];
-		const interfaceSubnets = data[2];
-		const onlineExitNodes = statusData.onlineExitNodes;
-		const subnetRoutes = statusData.subnetRoutes;
+		const statusData = data[1] || {};
+		const interfaceSubnets = data[2] || [];
+		const onlineExitNodes = statusData.onlineExitNodes || [];
+		const subnetRoutes = statusData.subnetRoutes || [];
 
 		m = new form.Map('tailscale', _('Tailscale'), _('Tailscale is a cross-platform and easy to use virtual LAN.'));
 
@@ -118,15 +173,15 @@ return view.extend({
 		s.render = function () {
 			poll.add(async function() {
 				const res = await getStatus();
-				const service_view = document.getElementById("service_status");
-				const login_view = document.getElementById("login_status_div");
-				service_view.innerHTML = renderStatus(res.isRunning);
-				login_view.innerHTML = renderLogin(res.backendState, res.authURL, res.displayName);
+				const service_view = document.getElementById('service_status');
+				const login_view = document.getElementById('login_status_div');
+				if (service_view) service_view.innerHTML = renderStatus(res.isRunning);
+				if (login_view) login_view.innerHTML = renderLogin(res.backendState, res.authURL, res.displayName);
 				const logoutButton = document.getElementById('logout_button');
 				if (logoutButton) {
 					logoutButton.onclick = function() {
 						if (confirm(_('Are you sure you want to log out and unbind the current device?'))) {
-							fs.exec("/usr/sbin/tailscale", ["logout"]);
+							fs.exec('/usr/sbin/tailscale', ['logout']);
 						}
 					}
 				}
@@ -237,16 +292,16 @@ return view.extend({
 		o.value('ts_ac_wan', _('Tailscale access WAN'));
 		o.value('lan_ac_ts', _('LAN access Tailscale'));
 		o.value('wan_ac_ts', _('WAN access Tailscale'));
-		o.default = "ts_ac_lan ts_ac_wan lan_ac_ts";
+		o.default = 'ts_ac_lan ts_ac_wan lan_ac_ts';
 		o.rmempty = true;
 
 		s.tab('extra', _('Extra Settings'));
 
 		o = s.taboption('extra', form.DynamicList, 'flags', _('Additional Flags'),
-			String.format(
-				_('List of extra flags. Format: --flags=value, e.g. <code>--exit-node=10.0.0.1</code>. <br> %s for enabling settings upon the initiation of Tailscale.'),
-				'<a href="https://tailscale.com/kb/1241/tailscale-up" target="_blank">' + _('Available flags') + '</a>'
-			)
+		String.format(
+			_('List of extra flags. Format: --flags=value, e.g. <code>--exit-node=10.0.0.1</code>. <br> %s for enabling settings upon the initiation of Tailscale.'),
+			'<a href="https://tailscale.com/kb/1241/tailscale-up" target="_blank">' + _('Available flags') + '</a>'
+		)
 		);
 		o.default = '';
 		o.rmempty = true;
