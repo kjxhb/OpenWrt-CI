@@ -1,7 +1,7 @@
 module("luci.controller.tailscale", package.seeall)
 
 function index()
-    entry({"admin", "services", "tailscale"}, cbi("t ailscale") and cbi("tailscale") or cbi("tailscale"), _("Tailscale"), 50).dependent = true
+    entry({"admin", "services", "tailscale"}, cbi("tailscale"), _("Tailscale"), 50).dependent = true
     entry({"admin", "services", "tailscale", "status"}, template("tailscale_status")).leaf = true
     entry({"admin", "services", "tailscale", "log"}, template("tailscale_log")).leaf = true
     -- JSON endpoint for AJAX or external queries
