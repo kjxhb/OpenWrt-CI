@@ -30,7 +30,6 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
-	$(INSTALL_BIN) ./root/usr/libexec/luci-tailscale-start-wrapper $(1)/usr/libexec/luci-tailscale-start-wrapper
 	$(INSTALL_DATA) ./luci/controller/tailscale.lua $(1)/usr/lib/lua/luci/controller/tailscale.lua
 	$(INSTALL_DATA) ./luci/model/cbi/tailscale.lua $(1)/usr/lib/lua/luci/model/cbi/tailscale.lua
 	$(INSTALL_DATA) ./luci/view/tailscale_status.htm $(1)/usr/lib/lua/luci/view/tailscale_status.htm
@@ -46,6 +45,7 @@ define Package/$(PKG_NAME)/install
 
 	# install a namespaced helper under /usr/libexec to avoid colliding with upstream tailscale init scripts
 	$(INSTALL_BIN) ./root/usr/libexec/luci-tailscale-helper $(1)/usr/libexec/luci-tailscale-helper
+	$(INSTALL_BIN) ./root/usr/libexec/luci-tailscale-start-wrapper $(1)/usr/libexec/luci-tailscale-start-wrapper
 	$(INSTALL_DATA) ./root/etc/hotplug.d/iface/40-tailscale $(1)/etc/hotplug.d/iface/40-tailscale
 	$(INSTALL_DATA) ./root/etc/uci-defaults/40_luci-tailscale $(1)/etc/uci-defaults/40_luci-tailscale
 	$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/luci-app-tailscale.json $(1)/usr/share/rpcd/acl.d/luci-app-tailscale.json
