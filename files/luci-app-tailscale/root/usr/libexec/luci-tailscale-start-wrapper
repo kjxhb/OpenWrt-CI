@@ -1,8 +1,0 @@
-#!/bin/sh
-# wrapper to start luci helper via consistent name (luci-tailscale-start-wrapper)
-
-if [ -x "/etc/init.d/tailscale" ]; then
-    /etc/init.d/tailscale start
-else
-    logger -p daemon.err -t luci-tailscale "/etc/init.d/tailscale not present; install tailscale package"
-fi
