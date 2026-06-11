@@ -1,0 +1,118 @@
+<%+header%>
+<div class="fma-map">
+    <h2 name="content" class="fma-title"><strong>全功能文件管理</strong></h2>
+    <div class="fma-desc">管理路由器上的文件和目录。请谨慎操作！</div>
+    <!-- 第一行——路径栏 -->
+    <div class="fma-value">
+        <div class="fma-path-group">
+            <label class="fma-path-title">路径导航：</label>
+            <div class="fma-breadcrumb-path" id="breadcrumb">
+                <a href="javascript:void(0)" data-path="/">根目录/</a>
+            </div>
+            <input type="text" id="path-input" class="fma-input-text" placeholder="/">
+            <button class="fma-btn fma-btn-action" id="go-btn">前往</button>
+        </div>
+    </div>
+    <!-- 第二行——批量操作按钮 -->
+    <div class="fma-value">
+        <div class="fma-btn-group">
+            <button class="fma-btn fma-btn-normal" id="select-mode-btn">选择</button>
+            <div class="fma-dropdown">
+                <button class="fma-btn fma-btn-add" id="upload-dropdown">📤 上传文件</button>
+                <div class="fma-dropdown-menu">
+                    <a class="fma-dropdown-item" href="javascript:void(0)" id="upload-file-btn">上传文件</a>
+                    <a class="fma-dropdown-item" href="javascript:void(0)" id="upload-dir-btn">上传文件夹</a>
+                </div>
+            </div>
+            <button class="fma-btn fma-btn-add" id="mkdir-btn">➕ 新建文件夹</button>
+            <button class="fma-btn fma-btn-add" id="mkfile-btn">📄 新建文件</button>
+            <button class="fma-btn fma-btn-normal" id="copy-btn" disabled>复制</button>
+            <button class="fma-btn fma-btn-normal" id="cut-btn" disabled>剪切</button>
+            <button class="fma-btn fma-btn-normal" id="paste-btn" disabled>粘贴</button>
+            <button class="fma-btn fma-btn-normal" id="pack-btn" disabled>打包</button>
+            <button class="fma-btn fma-btn-delete" id="batch-delete-btn" disabled>删除</button>
+            <button class="fma-btn fma-btn-normal" id="terminal-btn">💻 终端</button>
+        </div>
+    </div>
+    <!-- 第三行——文件列表 -->
+    <div class="fma-table-wrapper">
+        <button id="goback-btn" class="fma-btn fma-btn-goback">↩️ 返回上级</button>
+        <div id="file-list-container" class="fma-table">
+        </div>
+    </div>
+    <!-- 文件列表模板 -->
+    <template id="file-item-template">
+        <div class="fma-tr">
+            <div class="fma-td-check">
+                <input type="checkbox" class="fma-check-item" id="check-item">
+            </div>
+            <div class="fma-td-name" id="file-name"></div>
+            <div class="fma-td-info fma-td-info-user" id="info-user"></div>
+            <div class="fma-td-info fma-td-info-date" id="info-date"></div>
+            <div class="fma-td-info fma-td-info-size" id="info-size"></div>
+            <div class="fma-td-info fma-td-info-perm" id="info-perm"></div>
+            <div class="fma-td-action">
+                <button class="fma-btn fma-btn-normal" id="rename-btn">重命名</button>
+                <button class="fma-btn fma-btn-delete" id="delete-btn">删除</button>
+                <button class="fma-btn fma-btn-normal" id="unpack-pack-btn">打包</button>
+                <button class="fma-btn fma-btn-normal" id="chmod-btn">权限</button>
+                <button class="fma-btn fma-btn-action" id="edit-btn">编辑</button>
+                <button class="fma-btn fma-btn-add" id="install-btn">安装</button>
+            </div>
+        </div>
+    </template>
+    <!-- 编辑器模板 -->
+    <template id="editor-template">
+        <div class="fma-editor-modal" id="fma-editor-modal">
+            <div class="fma-editor-box" id="fma-editor-box">
+                <h4 class="fma-editor-title" id="fma-editor-title"></h4>
+                <textarea class="fma-editor-textarea" id="fma-editor-textarea"></textarea>
+                <div class="fma-editor-find-wrap" id="fma-editor-find-wrap">
+                    <input class="fma-editor-find-input" id="fma-editor-find-input" placeholder="查找">
+                    <input class="fma-editor-replace-input" id="fma-editor-replace-input" placeholder="替换为">
+                    <button class="fma-editor-find-btn" id="fma-editor-find-btn">查找下一个</button>
+                    <button class="fma-editor-replace-btn" id="fma-editor-replace-btn">替换</button>
+                    <button class="fma-editor-replace-all-btn" id="fma-editor-replace-all-btn">全部替换</button>
+                </div>
+                <div class="fma-editor-btn-wrap" id="fma-editor-btn-wrap">
+                    <button class="fma-btn fma-editor-cancel-btn" id="fma-editor-cancel-btn">取消</button>
+                    <button class="fma-btn fma-btn-action fma-editor-save-btn" id="fma-editor-save-btn" disabled>保存</button>
+                </div>
+            </div>
+        </div>
+    </template>
+    <!-- 终端弹窗模板 -->
+    <template id="terminal-template">
+        <div class="fma-terminal-modal" id="fma-terminal-modal">
+            <div class="fma-terminal-box" id="fma-terminal-box">
+                <div class="fma-terminal-header" id="fma-terminal-header">
+                    <h4 class="fma-terminal-title" id="fma-terminal-title">命令终端</h4>
+                    <button class="fma-terminal-close" id="term-close">×</button>
+                </div>
+                <div class="fma-term-output" id="term-output"></div>
+            </div>
+        </div>
+    </template>
+    <!-- 进度条 -->
+    <div class="fma-progress-container" id="fma-progress-container">
+    <div class="fma-progress-body" id="fma-progress-body">
+        <div class="fma-progress-info" id="fma-progress-info">
+        <span id="progress-filename"></span>
+        <span id="progress-percent">0%</span>
+        </div>
+        <div class="fma-progress-bar" id="fma-progress-bar">
+        <div class="fma-progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-stats" id="fma-progress-stats">
+        <span id="progress-stats">0 / 0</span>
+        </div>
+        <!-- 取消按钮 -->
+        <div class="fma-upload-cancel" id="fma-upload-cancel">
+        <button id="upload-cancel-btn">取消</button>
+        </div>
+    </div>
+    </div>
+</div>
+<link rel="stylesheet" href="/luci-static/resources/filemanager/fb.css">
+<script type="text/javascript" src="/luci-static/resources/filemanager/fb.js"></script>
+<%+footer%>

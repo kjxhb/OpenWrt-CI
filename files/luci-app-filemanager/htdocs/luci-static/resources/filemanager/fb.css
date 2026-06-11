@@ -1,0 +1,588 @@
+/* ============================================================
+   文件管理助手 CSS
+============================================================== */
+
+/* 页面主容器 */
+.fma-map {
+    width: 100%;                      /* 宽度铺满父容器 */
+    box-sizing: border-box;           /* 内边距不撑开宽度 */
+}
+
+/* 插件名称 */
+.fma-title {
+    font-size: 18px;                  /* 字体大小 */
+    margin: 10px 0;                   /* 上下外边距 */
+    font-weight: 500;                 /* 字体粗细 */
+}
+
+/* 描述文本 */
+.fma-desc {
+    color: #666;                      /* 文字灰色 */
+    font-size: 14px;                  /* 字体大小 */
+    margin: 15px 15px;                /* 上下/左右间距 */
+}
+
+/* 板块容器样式 */
+.fma-value {
+    margin: 10px 0;                    /* 上下左右外边距 */
+    background: #ffffff;               /* 白色背景 */
+    border: 1px solid #eeeeee;         /* 边框 */
+    border-radius: 6px;                /* 圆角 */
+    overflow: hidden;                  /* 隐藏溢出内容 */
+}
+
+/* ====================== 路径栏 ====================== */
+/* 路径组合容器 */
+.fma-path-group {
+    display: flex;                    /* 弹性布局 */
+    gap: 8px;                         /* 子元素间距 */
+    align-items: center;              /* 垂直居中对齐 */
+    flex-wrap: wrap;                  /* 超出宽度自动换行 */
+    min-width: 300px;                 /* 最小宽度限制 */
+    margin: 5px 10px;                 /* 上下左右外边距 */
+}
+
+/* 路径前文字 */
+.fma-path-title {
+    font-size: 14px;                    /* 字体大小 */
+    color: #333;                        /* 文字颜色 */
+}
+
+/* 路径 */
+.fma-breadcrumb-path {
+    display: flex;                    /* 弹性布局 */
+    gap: 1px;                         /* 子元素间距 */
+    flex-wrap: wrap;                  /* 超出宽度自动换行 */
+    font-size: 14px;                  /* 字体大小 */
+    margin-right: 20px;               /* 右侧外边距 */
+}
+
+/* 路径输入框样式 */
+.fma-input-text {
+    flex: 1;                          /* 自动填充剩余宽度 */
+    border: 1px solid #ddd;           /* 边框样式 */
+    border-radius: 4px;               /* 圆角 */
+    font-size: 14px;                  /* 字体大小 */
+    box-sizing: border-box;           /* 标准盒模型 */
+}
+
+/* ====================== 下拉菜单 ====================== */
+/* 下拉菜单容器 */
+.fma-dropdown {
+    display: inline-block;             /* 行内块级元素 */
+    position: static;                     /* 静态定位，解除层级限制 */
+}
+
+/* 下拉菜单面板 */
+.fma-dropdown-menu {
+    position: absolute;                /* 相对于父级定位 */
+    z-index: 999999;                   /* 最高层级，避免被遮挡 */
+    background: #ffffff;               /* 白色背景 */
+    border: 1px solid #ddd;            /* 边框样式 */
+    border-radius: 4px;                /* 圆角 */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 阴影增强立体感 */
+    min-width: 100px;                  /* 最小宽度限制 */
+    padding: 5px 0;                    /* 内部高度 */
+    display: none;                     /* 默认隐藏不显示 */
+}
+
+/* 鼠标悬浮时显示菜单 */
+.fma-dropdown:hover .fma-dropdown-menu {
+    display: block;                    /* 切换为块级显示 */
+}
+
+/* 下拉菜单项 */
+.fma-dropdown-item {
+    display: block;                    /* 块级元素独占一行 */
+    padding: 9px 14px;                 /* 内边距 */
+    color: #333;                       /* 文字颜色 */
+    text-decoration: none;             /* 清除文字下划线 */
+    cursor: pointer;                   /* 鼠标悬浮显示手型 */
+}
+
+/* 下拉菜单项悬浮 */
+.fma-dropdown-item:hover {
+    background: #f5f5f5;               /* 悬浮背景色 */
+}
+
+/* ====================== 文件列表 ====================== */
+/* 表格容器 */
+.fma-table-wrapper {
+    width: 100%;                        /* 宽度铺满父容器 */
+    background: #ffffff;                /* 白色背景 */
+    border: 1px solid #eeeeee;          /* 边框样式 */
+    border-radius: 6px;                 /* 圆角 */
+    overflow: hidden;                   /* 隐藏溢出内容 */
+    padding: 0 12px;                   /* 左右内边距 */
+    overflow-x: auto;                   /* 水平方向滚动 */
+    -webkit-overflow-scrolling: touch; /* 移动端流畅滚动 */
+}
+
+/* 表格主体 */
+.fma-table {
+    display: block;                     /* 块级元素 */
+    width: 100%;                        /* 宽度铺满父容器 */
+    font-size: 14px;                    /* 字体大小 */
+}
+
+/* 表格行 */
+.fma-tr {
+    display: flex;                      /* 弹性布局 */
+    align-items: center;                /* 垂直居中对齐 */
+    width: 100%;                        /* 宽度铺满父容器 */
+    padding: 4px 0;                     /* 上下内边距 */
+    /*border-bottom: 1px solid #f0f0f0;    /* 底部分隔线 */
+    border-bottom: 1px solid #D8D8D8;
+}
+
+/* 偶数行背景变灰色 */
+.fma-tr:nth-child(even) {
+    background: #f9f9f9;                /* 浅灰色（柔和不刺眼） */
+}
+
+/* 行悬浮效果 */
+.fma-tr:hover {
+    background: #f8f9fa;               /* 悬浮背景色 */
+}
+
+/* 1. 复选框列 */
+.fma-td-check {
+    width: 3%;                          /* 固定宽度 */
+    flex-shrink: 0;                     /* 禁止宽度压缩 */
+    justify-content: center;            /* 水平居中对齐 */
+}
+
+/* 复选框间距 */
+.fma-check-item {
+    margin: 0 4px 0 0 !important;
+}
+
+/* 2. 文件名列 */
+.fma-td-name {
+    width: 28%;                         /* 百分比宽度 */
+    margin: 0 3px;                      /* 左右边距 */
+    font-weight: bold;                  /* 图标文字加粗 */
+    cursor: pointer;                    /* 鼠标悬浮显示手型 */
+    overflow: hidden;                   /* 隐藏溢出内容 */
+    word-wrap: break-word;              /* 长单词自动换行 */
+    text-align: left;                   /* 文字左对齐 */
+}
+
+/* 3. 信息列 */
+.fma-td-info {
+    margin: 0 2px;                      /* 左右边距 */
+    text-align: center;                 /* 文字居中对齐 */
+}
+
+/* 3. 信息列-用户 */
+.fma-td-info-user {
+    width: 8%;                         /* 百分比宽度 */
+}
+
+/* 3. 信息列-时间 */
+.fma-td-info-date {
+    width: 10%;                         /* 百分比宽度 */
+}
+
+/* 3. 信息列-大小 */
+.fma-td-info-size {
+    width: 8%;                         /* 百分比宽度 */
+}
+
+/* 3. 信息列-权限 */
+.fma-td-info-perm {
+    width: 10%;                         /* 百分比宽度 */
+}
+
+/* 4. 操作按钮列 */
+.fma-td-action {
+    min-width: 33%;                     /* 百分比宽度 */
+    max-width: 36%;                     /* 百分比宽度 */
+    display: inline-flex;               /* 行内弹性布局 */
+    justify-content: flex-start;        /* 水平左对齐 */
+    gap: 5%;                            /* 元素间距 */
+}
+
+/* 文件夹图标 */
+.fma-icon-folder::before {
+    background-image: url("/luci-static/resources/filemanager/folder-icon.png"); /* 文件夹图标路径 */
+}
+
+/* 文件图标 */
+.fma-icon-file::before {
+    background-image: url("/luci-static/resources/filemanager/file-icon.png"); /* 文件图标路径 */
+}
+
+/* 链接图标 */
+.fma-icon-link::before {
+    background-image: url("/luci-static/resources/filemanager/link-icon.png"); /* 链接图标路径 */
+}
+
+/* 图标样式 */
+.fma-icon-folder::before,
+.fma-icon-file::before,
+.fma-icon-link::before {
+    content: "";                        /* 伪元素空内容 */
+    display: inline-block;              /* 行内块级元素 */
+    width: 25px;                        /* 图标宽度 */
+    height: 25px;                       /* 图标高度 */
+    margin-right: 8px;                  /* 右侧外边距 */
+    background-size: contain;           /* 背景图自适应缩放 */
+    background-repeat: no-repeat;       /* 背景图不重复 */
+    background-position: center;        /* 背景图居中显示 */
+    vertical-align: middle;             /* 垂直居中对齐 */
+}
+
+/* ====================== 按钮 ====================== */
+/* 通用按钮基础样式 */
+.fma-btn {
+    padding: 11px 11px;                   /* 内边距 */
+    white-space: nowrap;                /* 禁止文字换行 */
+    border: none;                       /* 清除默认边框 */
+    background: #5e5e5e;                /* 背景色 */
+    color: #fff;                        /* 文字白色 */
+    border-radius: 4px;                 /* 圆角 */
+    cursor: pointer;                    /* 鼠标悬浮显示手型 */
+    font-size: 14px;                    /* 字体大小 */
+    display: inline-flex;               /* 行内弹性布局 */
+    align-items: center;                /* 垂直居中对齐 */
+    justify-content: center;            /* 水平居中对齐 */
+    transition: all 0.2s;               /* 所有属性0.2秒平滑过渡 */
+}
+
+/* 按钮组 */
+.fma-btn-group {
+    display: inline-flex;               /* 行内弹性布局 */
+    gap: 15px;                          /* 按钮间距 */
+    flex-wrap: wrap;                    /* 超出宽度自动换行 */
+}
+
+/* 按钮悬浮效果 */
+.fma-btn:hover {
+    opacity: 0.9;                       /* 透明度降低 */
+}
+
+/* 按钮禁用状态 */
+.fma-btn:disabled {
+    opacity: 0.5;                       /* 半透明效果 */
+    cursor: not-allowed;                /* 鼠标显示禁止图标 */
+}
+
+/* 前往/编辑按钮 */
+.fma-btn-action {
+    background: #259249;                /* 蓝色背景 */
+}
+
+/* 新建/上传按钮 */
+.fma-btn-add {
+    background: #259249;                /* 绿色背景 */
+}
+
+/* 删除按钮 */
+.fma-btn-delete {
+    background: #d32f2f;                /* 红色背景 */
+}
+
+/* 功能按钮 */
+.fma-btn-normal {
+    background: #5e72e4;                /* 深灰色背景 */
+}
+
+/* 返回按钮 */
+.fma-btn-goback {
+    margin: 0px 20px;                   /* 外边距 */
+    color: #333;                        /* 文字颜色 */
+    background: #ffffff;                /* 白色背景 */
+}
+
+/* ====================== 文本编辑器弹窗 ====================== */
+.fma-editor-modal {
+    position: fixed;                    /* 固定定位全屏覆盖 */
+    left: 0;                            /* 左侧贴边 */
+    top: 0;                             /* 顶部贴边 */
+    width: 100%;                        /* 全屏宽度 */
+    height: 100%;                       /* 全屏高度 */
+    background: rgba(0,0,0,0.7);        /* 半透明黑色遮罩 */
+    z-index: 99999;                     /* 高层级显示 */
+    display: flex;                      /* 弹性布局 */
+    justify-content: center;            /* 水平居中 */
+    align-items: center;                /* 垂直居中 */
+}
+
+/* 编辑器窗口 */
+.fma-editor-box {
+    background: #fff;                   /* 白色背景 */
+    padding: 15px;                      /* 内边距 */
+    border-radius: 8px;                 /* 圆角 */
+    width: 90%;                         /* 宽度占父容器90% */
+    max-width: 800px;                   /* 最大宽度限制 */
+    max-height: 90vh;                   /* 最大高度为屏幕90% */
+    overflow: auto;                     /* 内容溢出滚动 */
+}
+
+/* 编辑器标题 */
+.fma-editor-title {
+    margin: 0 0 10px 0;                 /* 底部外边距 */
+}
+
+/* 编辑文本域 */
+.fma-editor-textarea {
+    width: 100%;                        /* 宽度铺满父容器 */
+    height: 350px;                      /* 固定高度 */
+    padding: 10px;                      /* 内边距 */
+    font-family: monospace;             /* 等宽字体 */
+    white-space: pre;                   /* 保留文本格式 */
+    overflow: auto;                     /* 内容溢出滚动 */
+    margin-bottom: 10px;                /* 底部外边距 */
+    border: 1px solid #ccc;             /* 边框样式 */
+    border-radius: 4px;                 /* 圆角 */
+    box-sizing: border-box;             /* 标准盒模型 */
+}
+
+/* 编辑文本域滚动条区域 */
+.fma-editor-textarea::-webkit-scrollbar {
+    width: 10px;                         /* 滚动条宽度 */
+    height: 10px;                        /* 水平滚动条高度 */
+    cursor: default;                     /* 光标样式default为箭头，text为光标 */
+}
+
+/* 编辑文本域滚动条块 */
+.fma-editor-textarea::-webkit-scrollbar-thumb {
+    height: 15%;                         /* 水平滚动条高度 */
+    cursor: default;                    /* 光标样式为箭头，text为光标 */
+}
+
+/* 查找替换按钮组 */
+.fma-editor-find-wrap {
+    display: flex;                      /* 弹性布局 */
+    gap: 8px;                           /* 子元素间距 */
+    flex-wrap: wrap;                    /* 超出宽度自动换行 */
+    align-items: center;                /* 垂直居中对齐 */
+    margin-bottom: 10px;                /* 底部外边距 */
+    padding: 8px;                       /* 内边距 */
+    background: #f8f8f8;                /* 浅灰色背景 */
+    border-radius: 4px;                 /* 圆角 */
+}
+.fma-editor-find-wrap input {
+    padding: 4px 6px;                   /* 内边距 */
+    border: 1px solid #ccc;             /* 边框样式 */
+    border-radius: 4px;                 /* 圆角 */
+    flex: 1;                            /* 自动填充剩余宽度 */
+    min-width: 120px;                   /* 最小宽度限制 */
+}
+.fma-editor-find-wrap button {
+    padding: 4px 10px;                  /* 内边距 */
+    border: none;                       /* 清除边框 */
+    border-radius: 4px;                 /* 圆角 */
+    background: #eee;                   /* 背景色 */
+    cursor: pointer;                    /* 鼠标悬浮显示手型 */
+}
+
+/* 保存取消按钮组 */
+.fma-editor-btn-wrap {
+    text-align: right;                  /* 内容右对齐 */
+}
+/* 取消按钮 */
+.fma-editor-cancel-btn {
+    background: #757575;                /* 温和灰色 - 取消 */
+    padding: 7px 12px;                   /* 更舒服的内边距 */
+    margin-right: 10px;                 /* 与保存按钮间距 */
+    border-radius: 4px;                 /* 统一圆角 */
+}
+/* 保存按钮 */
+.fma-editor-save-btn {
+    background: #259249;                /* 绿色 - 保存 */
+    padding: 7px 12px;                   /* 统一大小 */
+    border-radius: 4px;                 /* 统一圆角 */
+}
+.fma-editor-save-btn:disabled {
+    background: #81c784;               /* 禁用时淡绿色 */
+    cursor: not-allowed;               /* 鼠标显示禁止图标 */
+    opacity: 0.6;
+}
+
+/* 空目录/加载状态 */
+.fma-empty,
+.fma-loading {
+    padding: 30px 0;                  /* 上下内边距 */
+    text-align: center;               /* 文字水平居中 */
+    color: #666;                      /* 文字灰色 */
+}
+
+/* ====================== 命令终端 ====================== */
+/* 终端全屏遮罩层容器：覆盖整个屏幕，居中展示终端弹窗 */
+.fma-terminal-modal {
+    position: fixed;               /* 固定定位，脱离文档流 */
+    left: 0; top: 0;               /* 定位到页面左上角 */
+    width: 100%; height: 100%;     /* 宽高铺满整个可视窗口 */
+    background: rgba(0,0,0,0.7);   /* 半透明黑色背景，增强弹窗层次感 */
+    z-index: 999999;               /* 极高层级，确保弹窗在最上层显示 */
+    display: flex;                 /* flex布局，用于子元素居中 */
+    justify-content: center;       /* 水平居中 */
+    align-items: center;           /* 垂直居中 */
+}
+/* 终端主体盒子：终端核心容器，设置外观、尺寸和基础样式 */
+.fma-terminal-box {
+    background: #1e1e1e;           /* 终端深色背景 */
+    color: #fff;                   /* 文字默认白色 */
+    width: 90%;                    /* 响应式宽度，占屏幕90% */
+    max-width: 860px;              /* 最大宽度限制，避免过大 */
+    max-height: 85vh;              /* 最大高度限制，占屏幕85%高度 */
+    border-radius: 8px;            /* 圆角边框，提升美观度 */
+    font-family: Consolas, monospace; /* 等宽字体，适合代码/终端显示 */
+    overflow: hidden;              /* 隐藏超出容器的内容，配合圆角 */
+}
+/* 终端头部：顶部标题栏容器，布局和样式设置 */
+.fma-terminal-header {
+    display: flex;               /* flex布局 */
+    justify-content: space-between; /* 两端对齐，标题和关闭按钮分居两侧 */
+    align-items: center;         /* 垂直居中对齐 */
+    padding: 6px 16px;           /* 内边距，上下6px 左右16px */
+    background: #2d2d2d;         /* 头部背景色，区分主体区域 */
+}
+/* 终端标题：头部标题文字样式 */
+.fma-terminal-title {
+    margin: 0;                       /* 清除默认外边距 */
+    font-size: 15px;                 /* 标题字体大小 */
+    color: #fff;                     /* 标题文字颜色 */
+}
+/* 终端关闭按钮：关闭弹窗的按钮样式 */
+.fma-terminal-close {
+    background: none;                 /* 无背景色 */
+    border: none;                     /* 无边框 */
+    color: #fff;                      /* 按钮图标白色 */
+    font-size: 20px;                  /* 按钮图标大小 */
+    cursor: pointer;                  /* 鼠标悬浮显示手型光标 */
+    padding: 0 8px;                   /* 左右内边距，增加点击区域 */
+}
+/* 终端输出内容区：展示命令输出结果的区域 */
+.fma-term-output {
+    padding: 16px;           /* 内边距，内容与边框间距 */
+    height: 420px;           /* 固定高度 */
+    overflow-y: auto;        /* 垂直方向内容溢出时显示滚动条 */
+    white-space: pre-wrap;   /* 保留文本换行和空格，自动换行 */
+    line-height: 1.6;        /* 行高，提升可读性 */
+    background: #111;        /* 内容区深色背景 */
+    color: #ccc;             /* 内容文字浅灰色 */
+    outline: none;           /* 去除聚焦时的默认轮廓线 */
+}
+
+/* 滚动条区域：定义整个滚动条的基础样式 */
+.fma-term-output::-webkit-scrollbar {
+    width: 10px;                         /* 垂直滚动条宽度 */
+    height: 10px;                        /* 水平滚动条高度 */
+    cursor: default;                     /* 滚动条上的光标样式：默认箭头 */
+}
+
+/* 滚动条滑块：可拖动的滚动条主体样式 */
+.fma-term-output::-webkit-scrollbar-thumb {
+    height: 15%;                         /* 水平滚动条滑块高度 */
+    cursor: default;                     /* 滑块上的光标样式：箭头 */
+}
+/* ====================== 进度条 ====================== */
+/* 进度条悬浮弹窗  */
+.fma-progress-container {
+    position: fixed;                     /* 固定定位悬浮显示 */
+    left: 50%;                           /* 水平居中基准点 */
+    top: 50%;                            /* 垂直居中基准点 */
+    transform: translate(-50%, -50%);    /* 偏移实现完全居中 */
+    width: 420px;                        /* 默认宽度 */
+    max-width: 90%;                      /* 小屏幕最大宽度90% */
+    z-index: 99999;                      /* 最高层级 */
+    display: none;                       /* 默认隐藏 */
+    background: #fff;                    /* 白色背景 */
+    padding: 18px 20px;                  /* 内边距 */
+    border-radius: 8px;                  /* 圆角 */
+    box-shadow: 0 3px 18px rgba(0,0,0,0.15); /* 阴影效果 */
+}
+
+/* 进度条主体 */
+.fma-progress-body {
+    width: 100%;                        /* 宽度铺满父容器 */
+}
+
+/* 进度信息 */
+.fma-progress-info {
+    display: flex;                      /* 弹性布局 */
+    justify-content: space-between;     /* 两端对齐分布 */
+    margin-bottom: 8px;                 /* 底部外边距 */
+    font-size: 13px;                    /* 字体大小 */
+    color: #333;                        /* 文字颜色 */
+}
+
+/* 进度条背景 */
+.fma-progress-bar {
+    height: 8px;                        /* 进度条高度 */
+    background: #f0f0f0;                /* 浅灰色背景 */
+    border-radius: 4px;                 /* 圆角 */
+    overflow: hidden;                   /* 隐藏溢出内容 */
+}
+
+/* 进度条填充 */
+.fma-progress-fill {
+    height: 100%;                       /* 高度铺满背景条 */
+    background: #0066cc;                /* 主色调蓝色 */
+    width: 0%;                          /* 初始进度0% */
+    transition: width 0.2s ease;        /* 宽度变化平滑动画 */
+}
+
+/* 进度文字 */
+.fma-progress-stats {
+    margin-top: 8px;                    /* 顶部外边距 */
+    font-size: 12px;                    /* 字体大小 */
+    color: #666;                        /* 文字颜色 */
+    text-align: center;                 /* 文字水平居中 */
+}
+
+/* 取消按钮容器 */
+.fma-upload-cancel {
+    text-align: center;                 /* 内容水平居中 */
+    margin-top: 14px;                   /* 顶部外边距 */
+}
+
+/* 取消按钮 */
+#upload-cancel-btn {
+    padding: 6px 18px;                  /* 内边距 */
+    border: 1px solid #ddd;             /* 边框样式 */
+    background: #fff;                   /* 白色背景 */
+    border-radius: 4px;                 /* 圆角 */
+    cursor: pointer;                    /* 鼠标悬浮显示手型 */
+    font-size: 13px;                    /* 字体大小 */
+}
+#upload-cancel-btn:hover {
+    background: #f5f5f5;                /* 悬浮背景色 */
+}
+
+/* ============================================== */
+/* 手机端响应式：屏幕≤768px时样式 */
+/* ============================================== */
+@media (max-width:768px) {
+  .fma-breadcrumb-path {
+    min-width: 50%;                    /* 保证占满整行宽度 */
+  }
+  .fma-table {
+    min-width: auto;                    /* 清除最小宽度限制 */
+  }
+  .fma-tr {
+    flex-wrap: wrap;                    /* 允许自动换行适配屏幕 */
+  }
+  .fma-td-check {
+    width: 25px;                        /* 固定宽度 */
+  }
+  .fma-td-name {
+    min-width: 34%;                     /* 百分比宽度 */
+    max-width: 40%;                     /* 百分比宽度 */
+  }
+  .fma-td-info-date {
+    width: 15%;                         /* 百分比宽度 */
+  }
+  .fma-td-info-perm {
+    min-width: 20%;                     /* 百分比宽度 */
+  }
+  .fma-td-action {
+    display: flex;                      /* 弹性布局 */
+    min-width: 100%;                    /* 占满整行宽度 */
+    padding-top: 10px;                  /* 顶部内边距 */
+    flex: 1;                            /* 自动填充剩余宽度 */
+  }
+}
