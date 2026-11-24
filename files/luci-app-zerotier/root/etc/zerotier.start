@@ -1,0 +1,81 @@
+#!/bin/sh
+
+zero_enable="$(uci get zerotier.sample_config.enabled)"
+
+[ "${zero_enable}" -ne "1" ] && exit 0
+
+[ -f "/tmp/zero.log" ] && {
+	while :; do
+		zt_ready="$(ifconfig | grep 'zt' | awk '{print $1}')"
+		[ -n "$zt_ready" ] || { sleep 1; continue; }
+		all_ready=1
+		for z in $zt_ready; do
+			ifconfig $z | grep -q 'inet addr:' || all_ready=0
+		done
+		[ "$all_ready" = "1" ] && break
+		sleep 1
+	done
+}
+
+nat_enable="$(uci get zerotier.sample_config.nat)"
+zt0="$(ifconfig | grep 'zt' | awk '{print $1}')"
+echo "${zt0}" > "/tmp/zt.nif"
+
+for i in ${zt0}; do
+	if [ -z "$(uci -q get network.$i)" ]; then
+		ip4="$(ifconfig $i | sed -n 's/.*inet addr:\([0-9.]*\).*/\1/p')"
+		mask="$(ifconfig $i | sed -n 's/.*Mask:\([0-9.]*\).*/\1/p')"
+		ip6="$(ifconfig $i | sed -n 's/.*inet6 addr: \([0-9a-f:]*\)\/[0-9]* Scope:Global.*/\1/p')"
+		uci set network.$i='interface'
+		uci set network.$i.proto='static'
+		uci set network.$i.ipaddr="$ip4"
+		uci set network.$i.netmask="$mask"
+		[ -n "$ip6" ] && uci add_list network.$i.ip6addr="$ip6"
+		uci set network.$i.ifname="$i"
+		uci commit network
+		ifup "$i"
+	fi
+done
+
+if [ -z "$(uci -q get firewall.ztzone)" ]; then
+	uci set firewall.ztzone='zone'
+	uci set firewall.ztzone.input='ACCEPT'
+	uci set firewall.ztzone.output='ACCEPT'
+	uci set firewall.ztzone.forward='ACCEPT'
+	uci set firewall.ztzone.mtu_fix='1'
+	uci set firewall.ztzone.name='zerotier'
+	for i in ${zt0}; do
+		uci add_list firewall.ztzone.network="$i"
+	done
+
+	uci set firewall.zt_ac_lan='forwarding'
+	uci set firewall.zt_ac_lan.src='zerotier'
+	uci set firewall.zt_ac_lan.dest='lan'
+
+	uci set firewall.zt_ac_wan='forwarding'
+	uci set firewall.zt_ac_wan.src='zerotier'
+	uci set firewall.zt_ac_wan.dest='wan'
+
+	uci set firewall.lan_ac_zt='forwarding'
+	uci set firewall.lan_ac_zt.src='lan'
+	uci set firewall.lan_ac_zt.dest='zerotier'
+
+	uci set firewall.wan_ac_zt='forwarding'
+	uci set firewall.wan_ac_zt.src='wan'
+	uci set firewall.wan_ac_zt.dest='zerotier'
+
+	uci commit firewall
+	/etc/init.d/firewall reload
+fi
+
+[ "${nat_enable}" -eq "1" ] && {
+	for i in ${zt0}
+	do
+		ip_segment=""
+		iptables -I FORWARD -i "$i" -j ACCEPT
+		iptables -I FORWARD -o "$i" -j ACCEPT
+		iptables -t nat -I POSTROUTING -o "$i" -j MASQUERADE
+		ip_segment="$(ip route | grep "dev $i proto kernel" | awk '{print $1}')"
+		iptables -t nat -I POSTROUTING -s "${ip_segment}" -j MASQUERADE
+	done
+}

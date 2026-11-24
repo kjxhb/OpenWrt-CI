@@ -1,0 +1,11 @@
+{
+	"luci-app-tailscale-community": {
+		"description": "Allow user access to tailscale",
+		"read": {
+			"uci": [ "tailscale" ]
+		},
+		"write": {
+			"uci": [ "tailscale" ]
+		}
+	}
+}
