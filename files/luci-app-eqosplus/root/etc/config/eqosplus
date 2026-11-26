@@ -6,7 +6,7 @@ config eqosplus
 	option ifname '1'
 
 config device
-	option mac '192.168.1.1/24'
+	option mac '192.168.1.10/24'
 	option timestart '00:00'
 	option timeend '00:00'
 	option week '0'
