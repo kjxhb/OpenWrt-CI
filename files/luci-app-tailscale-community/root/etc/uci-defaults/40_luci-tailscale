@@ -1,6 +1,6 @@
 #!/bin/sh
 
-/etc/init.d/tailscale disable
+#/etc/init.d/tailscale disable
 /etc/init.d/tailscale stop
 
 exit 0
