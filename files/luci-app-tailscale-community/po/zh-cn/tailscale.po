@@ -1,0 +1,227 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh-cn\n"
+
+msgid "Tailscale"
+msgstr "Tailscale"
+
+msgid "Tailscale is a mesh VPN solution that makes it easy to connect your devices securely. This configuration page allows you to manage Tailscale settings on your OpenWrt device."
+msgstr "Tailscale 是一个网状 VPN 解决方案，可以轻松地安全连接您的设备。此配置页面允许您在 OpenWrt 设备上管理 Tailscale 设置。"
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "Basic Settings"
+msgstr "基本设置"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Custom Login Server"
+msgstr "自定义登录服务器"
+
+msgid "Optional: Specify a custom control server URL (e.g., a Headscale instance, %s)."
+msgstr "可选：指定自定义控制服务器 URL（例如 Headscale 实例，%s）。"
+
+msgid "Leave blank for default Tailscale control plane."
+msgstr "留空以使用默认的 Tailscale 控制平面。"
+
+msgid "Custom Login Server Auth Key"
+msgstr "自定义登录服务器认证密钥"
+
+msgid "Optional: Specify an authentication key for the custom control server. Leave blank if not required."
+msgstr "可选：为自定义控制服务器指定一个认证密钥。如果不需要，请留空。"
+
+msgid "If you are using custom login server but not providing an Auth Key, will redirect to the login page without pre-filling the key."
+msgstr "如果您使用自定义登录服务器但未提供认证密钥，将重定向到登录页面而不会预先填充密钥。"
+
+msgid "Advanced Settings"
+msgstr "高级设置"
+
+msgid "Firewall Mode"
+msgstr "防火墙模式"
+
+msgid "Select the firewall backend for Tailscale to use. Requires service restart to take effect."
+msgstr "选择 Tailscale 使用的防火墙后端。需要重启服务才能生效。"
+
+msgid "Accept Routes"
+msgstr "接受路由"
+
+msgid "Allow accepting routes announced by other nodes."
+msgstr "允许接受由其他节点通告的路由。"
+
+msgid "Advertise Exit Node"
+msgstr "通告出口节点"
+
+msgid "Declare this device as an Exit Node."
+msgstr "将此设备声明为出口节点。"
+
+msgid "Allow LAN Access"
+msgstr "允许局域网访问"
+
+msgid "When using the exit node, access to the local LAN is allowed."
+msgstr "使用出口节点时，允许访问本地局域网。"
+
+msgid "Enable Web Interface"
+msgstr "启用 Web 界面"
+
+msgid "Expose a web interface on port 5252 for managing this node over Tailscale."
+msgstr "在端口 5252 上暴露一个 Web 界面，用于通过 Tailscale 管理此节点。"
+
+msgid "Disable SNAT"
+msgstr "禁用 SNAT"
+
+msgid "Disable Source NAT (SNAT) for traffic to advertised routes. Most users should leave this unchecked."
+msgstr "为通告路由的流量禁用源地址转换 (SNAT)。大多数用户应保持此项不勾选。"
+
+msgid "Shields Up"
+msgstr "开启防护 (Shields Up)"
+
+msgid "When enabled, blocks all inbound connections from the Tailscale network."
+msgstr "启用后，将阻止来自 Tailscale 网络的所有入站连接。"
+
+msgid "Enable Tailscale SSH"
+msgstr "启用 Tailscale SSH"
+
+msgid "Allow connecting to this device through the SSH function of Tailscale."
+msgstr "允许通过 Tailscale 的 SSH 功能连接到此设备。"
+
+msgid "Disable MagicDNS"
+msgstr "禁用 MagicDNS"
+
+msgid "Use system DNS instead of MagicDNS."
+msgstr "使用系统 DNS 而不是 MagicDNS。"
+
+msgid "Exit Node"
+msgstr "出口节点"
+
+msgid "Select an exit node from the list. If enabled, Allow LAN Access is enabled implicitly."
+msgstr "从列表中选择出口节点。启用后，将隐式允许局域网访问。"
+
+msgid "None"
+msgstr ""
+
+msgid "Advertise Routes"
+msgstr "通告路由"
+
+msgid "Advertise subnet routes behind this device. Select from the detected subnets below or enter custom routes (comma-separated)."
+msgstr "通告此设备后的子网路由。从下面的子网中选择，或输入自定义路由 (逗号分隔)。"
+
+msgid "How to enable Site-to-Site?"
+msgstr "如何启用站点到站点？"
+
+msgid "1. Select \"Accept Routes\" (to access remote devices)."
+msgstr "1. 勾选 接受路由 (接受远程设备访问)。"
+
+msgid "2. In \"Advertise Routes\", select your local subnet (to allow remote devices to access this LAN)."
+msgstr "2. 在 通告路由 选择本设备的局域网段 (让远程设备能访问你)。"
+
+msgid "3. Save & Apply to make the configuration take effect."
+msgstr "3. 保存并应用使配置生效。"
+
+msgid "[Important] Log in to the Tailscale admin console and manually enable \"Subnet Routes\" for this device."
+msgstr "【重要】 登录 Tailscale 控制面板，在设备设置中手动授权子网路由。"
+
+msgid "Network Devices"
+msgstr "网络设备"
+
+msgid "Querying status ..."
+msgstr "正在查询状态……"
+
+msgid "Service Status"
+msgstr "服务状态"
+
+msgid "TAILSCALE NOT FOUND"
+msgstr "未找到 TAILSCALE"
+
+msgid "Tailscale logged out"
+msgstr "tailscale 已退出"
+
+msgid "Please use the login button in the settings below to authenticate."
+msgstr "请使用下方设置中的登录按钮进行认证。"
+
+msgid "Tailscale not running"
+msgstr "tailscale 未运行"
+
+msgid "Tailscale starting"
+msgstr "tailscale 正在启动……"
+
+msgid "RUNNING"
+msgstr "正在运行"
+
+msgid "Version"
+msgstr "版本"
+
+msgid "TUN Mode"
+msgstr "TUN 模式"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Disabled"
+msgstr "已禁用"
+
+msgid "Tailscale IPv4"
+msgstr "Tailscale IPv4"
+
+msgid "Tailscale IPv6"
+msgstr "Tailscale IPv6"
+
+msgid "Tailnet Name"
+msgstr "Tailnet 名称"
+
+msgid "No peer devices found."
+msgstr "未找到对等设备。"
+
+msgid "No network devices."
+msgstr "无网络设备"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Hostname"
+msgstr "主机名"
+
+msgid "Tailscale IP"
+msgstr "Tailscale IP"
+
+msgid "OS"
+msgstr "操作系统"
+
+msgid "Connection Info"
+msgstr "连接信息"
+
+msgid "RX"
+msgstr "接收"
+
+msgid "TX"
+msgstr "发送"
+
+msgid "Last Seen"
+msgstr "上次在线"
+
+msgid "Online"
+msgstr "在线"
+
+msgid "Offline"
+msgstr "离线"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "Now"
+msgstr "现在"
+
+msgid "Just now"
+msgstr "刚才"
+
+msgid "Login URL"
+msgstr "登录网址"
+
+msgid "Getting login URL ..."
+msgstr "登录网址生成中…"
+
+msgid "Go to relevant configuration page"
+msgstr "转到相关配置页面"
+
